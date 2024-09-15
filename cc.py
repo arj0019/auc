@@ -14,13 +14,13 @@ class Terminal():
     super().__init_subclass__(**kwargs)
     TERMINALS.append((re.compile(regex), cls))
 
-class Delimeter(Terminal, regex=r'[]()[{}]'): pass
+class Delimeter(Terminal, regex=r'[]()[{};]'): pass
 
-class Identifier(Terminal, regex=r'([A-Za-z_][0-9A-Za-z_]*)'): pass
+class Identifier(Terminal, regex=r'\b[A-Za-z_][0-9A-Za-z_]*\b'): pass
 
 class Value(Terminal, regex=r'\b\d+\b'): pass
 
-class Type(Terminal, regex=r'\b(?:void|int)'): pass
+class Type(Terminal, regex=r'\bvoid|int\b'): pass
 
 
 def tokenize(source):
