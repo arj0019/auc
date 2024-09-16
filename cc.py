@@ -16,20 +16,20 @@ class Terminal():
 
 class Delimeter(Terminal, regex=r'[]()[{};]'): pass
 
-class Identifier(Terminal, regex=r'\b[A-Za-z_][0-9A-Za-z_]*\b'): pass
+class Identifier(Terminal, regex=r'[A-Za-z_][0-9A-Za-z_]*'): pass
 
-class Value(Terminal, regex=r'\b\d+\b'): pass
+class Value(Terminal, regex=r'\d+'): pass
 
-class Type(Terminal, regex=r'\bvoid|int\b'): pass
+class Type(Terminal, regex=r'void|int'): pass
 
 
 def tokenize(source):
-    pos, tokens = 0, []
-    while pos < len(source):
-        for regex, cls in TERMINALS:
-            if match := regex.match(source, pos):
-                tokens.append(cls(match.group(0)))
-                pos = match.end(); break
-        else: pos += 1  # skip unrecognized characters
-    return tokens
+  pos, tokens = 0, []
+  while pos < len(source):
+    for regex, cls in TERMINALS:
+      if match := regex.match(source, pos):
+        tokens.append(cls(match.group(0)))
+        pos = match.end(); break
+    else: pos += 1  # skip unrecognized characters
+  return tokens
 
