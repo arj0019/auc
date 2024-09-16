@@ -12,11 +12,13 @@ class Parser():
     loc = 0
     while loc < len(source):
       for symbol, expression in self.non_terminals:
-        match = re.match(expression, source[loc:])
-        if match:
-          print(f"{symbol} := {match.groupdict()}")
-          loc = match.end(); break
-      else: loc += 1  # skip unrecognized characters
+        print(f"cmp {source[loc:]}, {symbol}::{expression}")
+        if (match := re.match(expression, source[loc:], re.DOTALL)):
+          print(f"eq  {match.group(0)}, {symbol}::{match.groupdict()}\n")
+          for _symbol, _expression in match.groupdict().items():
+            self.parse(_expression)
+          loc += match.end(); break
+      else: raise(SyntaxError(f"Failed to match: '{source[loc:]}'"))
         
   @staticmethod
   def _create_non_terminals(grammar):
