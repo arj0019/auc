@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import re
 
 
@@ -9,19 +10,19 @@ class Parser():
     self.non_terminals = self._create_non_terminals(grammar)
 
   def parse(self, source):
-    loc = 0
-    while loc < len(source):
-      for symbol, expression in self.non_terminals:
-        print(f"cmp {source[loc:]}, {symbol}::{expression}")
-        if (match := re.match(expression, source[loc:], re.DOTALL)):
-          print(f"eq  {match.group(0)}, {symbol}::{match.groupdict()}\n")
-          for _symbol, _expression in match.groupdict().items():
-            self.parse(_expression)
-          loc += match.end(); break
-      else: raise(SyntaxError(f"Failed to match: '{source[loc:]}'"))
+    return self._parse(source, self.non_terminals)
+
+  def _parse(self, source, grammar):
+    for symbol, expression in grammar.items():
+      if (match := re.match(expression, source, re.DOTALL)):
+        if (_match := match.groupdict().items()):
+          return {symbol:self._parse(expression, grammar)
+                  for symbol, expression in _match}
+        else: return match.group(0)
+    return None
         
   @staticmethod
   def _create_non_terminals(grammar):
     grammar = re.sub(r'\s*\n\s*', ' ', grammar)
-    return re.findall(BNF, grammar)
+    return OrderedDict(re.findall(BNF, grammar))
 
