@@ -7,10 +7,10 @@ BNF = r'<(\w+)>\s*::=\s*(.*?)\s*(?=<\w+>\s*::=|$)'
 
 class Parser():
   def __init__(self, grammar):
-    self.non_terminals = self._create_non_terminals(grammar)
+    self.grammar = self._parse_grammar(grammar)
 
   def parse(self, source):
-    return self._parse(source, self.non_terminals)
+    return self._parse(source, self.grammar)
 
   def _parse(self, source, grammar):
     ast = []
@@ -31,14 +31,14 @@ class Parser():
       else: raise SyntaxError(f"Match not found: {source[:30]}")
 
     # flatten single element lists and terminal values
-    if (len(ast) == 1):
-      if (len(ast[0]) == 1): ast = match.group(0)
-      else: ast = ast[0]
+    # if (len(ast) == 1):
+    #   if (len(ast[0]) == 1): ast = match.group(0)
+    #   else: ast = ast[0]
 
     return ast
 
   @staticmethod
-  def _create_non_terminals(grammar):
+  def _parse_grammar(grammar):
     grammar = re.sub(r'\s*\n\s*', ' ', grammar)
     return OrderedDict(re.findall(BNF, grammar))
 
