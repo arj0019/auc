@@ -13,14 +13,30 @@ class Parser():
     return self._parse(source, self.non_terminals)
 
   def _parse(self, source, grammar):
-    for symbol, expression in grammar.items():
-      if (match := re.match(expression, source, re.DOTALL)):
-        if (_match := match.groupdict().items()):
-          return {symbol:self._parse(expression, grammar)
-                  for symbol, expression in _match}
-        else: return match.group(0)
-    return None
-        
+    ast = []
+    while source:  # sequentially match source to grammar
+      for symbol, expression in grammar.items():
+        if (match := re.match(expression, source, re.DOTALL)):
+          source = source[match.end():]
+          parsed_match = {symbol: {}}
+
+          # recursively parse subexpressions (grammar references)
+          if (_match := match.groupdict().items()):
+            for _symbol, _expression in _match:
+              parsed_match[symbol][_symbol] = self._parse(_expression, grammar)
+          else: parsed_match[symbol] = match.group(0)
+          
+          ast.append(parsed_match); break
+
+      else: raise SyntaxError(f"Match not found: {source[:30]}")
+
+    # flatten single element lists and terminal values
+    if (len(ast) == 1):
+      if (len(ast[0]) == 1): ast = match.group(0)
+      else: ast = ast[0]
+
+    return ast
+
   @staticmethod
   def _create_non_terminals(grammar):
     grammar = re.sub(r'\s*\n\s*', ' ', grammar)
