@@ -1,3 +1,5 @@
+.balanced {}, [], ()
+
 <function> ::= <type>\s+<identifier>\s*\(\s*<args>\s*\)\s*\{\s*<routine>\s*\}
 
 <args> ::= <type>\s+<identifier>\s*,\s*<args>
