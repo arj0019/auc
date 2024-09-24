@@ -16,24 +16,25 @@ class Parser():
     ast = []
     while source:  # sequentially match source to grammar
       for symbol, expression in grammar.items():
-        if (match := re.match(expression, source, re.DOTALL)):
-          source = source[match.end():]
-          parsed_match = {symbol: {}}
+        if not (match := re.match(expression, source, re.DOTALL)): continue
 
-          # recursively parse subexpressions (grammar references)
-          if (_match := match.groupdict().items()):
-            for _symbol, _expression in _match:
-              parsed_match[symbol][_symbol] = self._parse(_expression, grammar)
-          else: parsed_match[symbol] = match.group(0)
-          
-          ast.append(parsed_match); break
+        source = source[match.end():]
+        parsed_match = {symbol: {}}
 
-      else: raise SyntaxError(f"Match not found: {source[:30]}")
+        # recursively parse subexpressions (grammar references)
+        if (_match := match.groupdict().items()):
+          for _symbol, _expression in _match:
+            parsed_match[symbol][_symbol] = self._parse(_expression, {_symbol: grammar[_symbol]})
+        else: parsed_match[symbol] = match.group(0)
+        
+        ast.append(parsed_match); break
+
+      else: raise SyntaxError(f"@ln:col ({source[:30]})")
 
     # flatten single element lists and terminal values
-    # if (len(ast) == 1):
-    #   if (len(ast[0]) == 1): ast = match.group(0)
-    #   else: ast = ast[0]
+    if (len(ast) == 1):
+      if (len(ast[0]) == 1): ast = match.group(0)
+      else: ast = ast[0]
 
     return ast
 
