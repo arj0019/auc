@@ -2,6 +2,7 @@ from collections import OrderedDict
 import re
 
 
+DEL = r'^\s*\.del\s+(.+)$'
 BNF = r'<(\w+)>\s*::=\s*(.*?)\s*(?=<\w+>\s*::=|$)'
 
 
@@ -10,7 +11,8 @@ class Parser():
     self.grammar = self._parse_grammar(grammar)
 
   def parse(self, source):
-    return self._parse(source, self.grammar)
+    _source = self.preprocess(source)
+    return self._parse(_source, self.grammar)
 
   def _parse(self, source, grammar):
     ast = []
@@ -38,8 +40,14 @@ class Parser():
 
     return ast
 
-  @staticmethod
-  def _parse_grammar(grammar):
+  def preprocess(self, source):
+    source = re.sub(self._del, '', source)  # remove grammar exclusions
+    return source
+
+  def _parse_grammar(self, grammar):
+    match = re.search(DEL, grammar, re.MULTILINE)
+    self._del = match.group(1) if match else ''
+
     grammar = re.sub(r'\s*\n\s*', ' ', grammar)
     return OrderedDict(re.findall(BNF, grammar))
 
