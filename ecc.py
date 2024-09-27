@@ -18,12 +18,12 @@ class Parser():
 
   def parse(self, source):
     _source = self.preprocess(source)
-    return self._parse(_source, self.grammar)
+    return self._parse(_source, self.grammar.items())
 
-  def _parse(self, source, grammar):
+  def _parse(self, source, targets):
     ast = []
     while source:  # sequentially match source to grammar
-      for symbol, expression in grammar.items():
+      for symbol, expression in targets:
         if not (match := re.match(expression, source, re.DOTALL)): continue
 
         source = source[match.end():]
@@ -32,7 +32,8 @@ class Parser():
         # recursively parse subexpressions (grammar references)
         if (_match := match.groupdict().items()):
           for _symbol, _expression in _match:
-            parsed_match[symbol][_symbol] = self._parse(_expression, {_symbol: grammar[_symbol]})
+            if not _expression: continue
+            parsed_match[symbol][_symbol] = self._parse(_expression, {_symbol: self.grammar[_symbol]}.items())
         else: parsed_match[symbol] = match.group(0)
         
         ast.append(parsed_match); break
@@ -72,9 +73,9 @@ if __name__ == '__main__':
   with open(args.grammar, 'r') as file:
     _grammar = file.read()
   parser = Parser(_grammar)
-  if (args.verbose): printh('GRAMAMR', pprint.pformat(dict(parser.grammar)))
+  if (args.verbose): printh('GRAMAMR', pprint.pformat(dict(parser.grammar), sort_dicts=False))
 
   with open(args.source, 'r') as file:
     source = file.read()
   ast = parser.parse(source)
-  if (args.verbose): printh('SYNTAX', pprint.pformat(ast))
+  if (args.verbose): printh('SYNTAX', pprint.pformat(ast, sort_dicts=False))
