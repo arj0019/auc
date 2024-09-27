@@ -1,5 +1,11 @@
+import argparse
 from collections import OrderedDict
+import pprint
 import re
+import shutil
+
+
+TERMSIZE = shutil.get_terminal_size()  # get the terminal size for formatting
 
 
 DEL = r'^\s*\.del\s+(.+)$'
@@ -51,3 +57,24 @@ class Parser():
     grammar = re.sub(r'\s*\n\s*', ' ', grammar)
     return OrderedDict(re.findall(BNF, grammar))
 
+
+def printh(header, body): print(f"--- {header} {'-' * (TERMSIZE.columns - len(header) - 5)}\n{body}")
+
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser(prog='ecc', description='x86 assembly compilers generated from Backus Naur grammar extended with regular expressions')
+  parser.add_argument('grammar', help='language grammar file path')
+  parser.add_argument('source', help='source code file path')
+  parser.add_argument('-v', '--verbose', action='store_true', help='enable verbose output')
+
+  args = parser.parse_args()
+
+  with open(args.grammar, 'r') as file:
+    _grammar = file.read()
+  parser = Parser(_grammar)
+  if (args.verbose): printh('GRAMAMR', pprint.pformat(dict(parser.grammar)))
+
+  with open(args.source, 'r') as file:
+    source = file.read()
+  ast = parser.parse(source)
+  if (args.verbose): printh('SYNTAX', pprint.pformat(ast))
