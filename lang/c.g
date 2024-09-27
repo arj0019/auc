@@ -1,4 +1,5 @@
-.balanced {}, [], ()
+.del \n, \t
+.bal {.*}, [.*], (.*)
 
 <function> ::= <type>\s+<identifier>\s*\(\s*<args>\s*\)\s*\{\s*<routine>\s*\}
 
