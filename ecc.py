@@ -70,29 +70,28 @@ class Parser():
     Returns:
       ast (list, dict): abstract syntax tree of the given source code
     """
-    ast = []
+    ast = [];
     while source:  # sequentially match source to grammar
       for symbol, expressions in targets:
         for expression in expressions:
           if not (match := re.match(expression, source, re.DOTALL)): continue
 
-          source = source[match.end():]
-          parsed_match = {symbol: {}}
-
           # recursively parse subexpressions (grammar references)
-          if (_match := match.groupdict().items()):
-            for _symbol, _expression in _match:
-              if not _expression: continue
-              parsed_match[symbol][_symbol] = self._parse(_expression, {_symbol: self.grammar[_symbol]}.items())
-          else:
-            parsed_match[symbol] = match.group(0)
+          parsed_match = {symbol: {}}
+          try:
+            if (_match := match.groupdict().items()):
+              for _symbol, _expression in _match:
+                if not _expression: continue
+                parsed_match[symbol][_symbol] = self._parse(_expression, {_symbol: self.grammar[_symbol]}.items())
+            else:
+              parsed_match[symbol] = match.group(0)
+            ast.append(parsed_match); break
 
-          ast.append(parsed_match); break
+          except: continue
         else: continue
-        break
+        source = source[match.end():]; break
 
       else: raise SyntaxError(f"@ln:col ({source[:30]})")
-
     return ast
 
   def _simplify(self, struct):
