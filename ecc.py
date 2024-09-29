@@ -29,8 +29,10 @@ class Parser():
     match = re.search(DEL, grammar, re.MULTILINE)
     self._del = match.group(1) if match else ''
 
-    grammar = re.sub(r'\s*\n\s*', ' ', grammar)
-    return OrderedDict(re.findall(BNF, grammar))
+    grammar = re.sub(r'\s+', '', grammar)
+    grammar = re.findall(BNF, grammar)
+    grammar = [(sym, re.split(r'\|', expr)) for sym, expr in grammar]
+    return OrderedDict(grammar)
 
   def parse(self, source):
     """ Parse the given source code into an AST with recursive decent.
@@ -47,6 +49,15 @@ class Parser():
     return ast
 
   def preprocess(self, source):
+    """Modify given source code according to grammar configuration
+
+    Args:
+      self._del (str): characters to exclude
+      source (str): source code to preprocess
+
+    Returns:
+      source (str): preprocessed source code
+    """
     return re.sub(self._del, '', source)  # remove grammar exclusions
 
   def _parse(self, source, targets):
@@ -61,21 +72,24 @@ class Parser():
     """
     ast = []
     while source:  # sequentially match source to grammar
-      for symbol, expression in targets:
-        if not (match := re.match(expression, source, re.DOTALL)): continue
+      for symbol, expressions in targets:
+        for expression in expressions:
+          if not (match := re.match(expression, source, re.DOTALL)): continue
 
-        source = source[match.end():]
-        parsed_match = {symbol: {}}
+          source = source[match.end():]
+          parsed_match = {symbol: {}}
 
-        # recursively parse subexpressions (grammar references)
-        if (_match := match.groupdict().items()):
-          for _symbol, _expression in _match:
-            if not _expression: continue
-            parsed_match[symbol][_symbol] = self._parse(_expression, {_symbol: self.grammar[_symbol]}.items())
-        else:
-          parsed_match[symbol] = match.group(0)
+          # recursively parse subexpressions (grammar references)
+          if (_match := match.groupdict().items()):
+            for _symbol, _expression in _match:
+              if not _expression: continue
+              parsed_match[symbol][_symbol] = self._parse(_expression, {_symbol: self.grammar[_symbol]}.items())
+          else:
+            parsed_match[symbol] = match.group(0)
 
-        ast.append(parsed_match); break
+          ast.append(parsed_match); break
+        else: continue
+        break
 
       else: raise SyntaxError(f"@ln:col ({source[:30]})")
 
