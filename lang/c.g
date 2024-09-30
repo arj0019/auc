@@ -1,27 +1,19 @@
-.del \n, \t
-.bal {.*}, [.*], (.*)
+.del (\n|\t)
 
-<function> ::= <type>\s+<identifier>\s*\(\s*<args>\s*\)\s*\{\s*<routine>\s*\}
+<function> ::= (?P<type>\w+)\s+(?P<identifier>\w+)\(\)\s*\{\s*(?P<routine>.*?)\s*\}
 
-<args> ::= <type>\s+<identifier>\s*,\s*<args>
-         | <type>\s+<identifier>\s*,?
+<routine> ::= (?P<expression>[^;]*;)(?P<routine>[^;]*;)
+            | (?P<expression>[^;]*;)
+            | (?P<return>[^;]*;)
 
-<routine> ::= <equation><routine>
-            | <equation>
-            | <expression><routine>
-            | <expression>
+<expression> ::= (?P<type>\w+)\s+(?P<identifier>\w+)\s*=\s*(?P<expression>[^;]*;)
+               | (?P<value>\w+);
 
-<equation> ::= <type>\s+<identifier>\s*=\s*<expression>;
+<return> ::= return\s+(?P<value>\w+);
 
-<expression> ::= <value>\s*<op>\s*<expression>
-               | <value>;
+<type> ::= int
 
-<identifier>  ::= [A-Za-z_][0-9A-Za-z_]*
-
-<value> ::= "[A-Za-z_][0-9A-Za-z_]*"
-          | -?0x[0-9A-Fa-f]+
+<value> ::= -?0x[0-9A-Fa-f]+
           | -?[0-9]+
 
-<type> ::= int | char | str
-
-<op> ::= - | \+ | / | \*
+<identifier> ::= [A-Za-z_][0-9A-Za-z_]*
