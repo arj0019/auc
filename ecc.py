@@ -92,7 +92,7 @@ class Parser():
         else: continue
         source = source[match.end():]; break
 
-      else: raise SyntaxError(f"@ln:col ({source[:30]})")
+      else: raise SyntaxError(f"@ln:col ({source})")
     return ast
 
   def _reduce(self, struct):
@@ -114,7 +114,7 @@ class Parser():
 
     elif isinstance(struct, dict):
       _struct = {}
-      for key, value in struct.items(): # Recursively reduce dictionaries by key
+      for key, value in struct.items():  # Recursively reduce dictionaries by key
         _value = self._reduce(value)
         if (isinstance(_value, dict) and len(_value) == 1 and key in _value):
           _struct[key] = _value[key]
@@ -137,12 +137,10 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
-  with open(args.grammar, 'r') as file:
-    _grammar = file.read()
+  with open(args.grammar, 'r') as file: _grammar = file.read()
   parser = Parser(_grammar, reduce=args.reduce)
   if (args.verbose): printh('GRAMAMR', pprint.pformat(dict(parser.grammar), sort_dicts=False))
 
-  with open(args.source, 'r') as file:
-    source = file.read()
+  with open(args.source, 'r') as file: source = file.read()
   ast = parser.parse(source)
   if (args.verbose): printh('SYNTAX', pprint.pformat(ast, sort_dicts=False))
