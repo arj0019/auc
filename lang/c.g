@@ -2,16 +2,20 @@
 
 <function> ::= (?P<type>\w+)\s+(?P<identifier>\w+)\(\)\s*\{(?P<routine>.*?)\}
 
-<routine> ::= \s*(?P<expression>[^;]*;)(?P<routine>[^;]*;)\s*
+<routine> ::= \s*(?P<assignment>[^;]*;)(?P<routine>[^;]*;)\s*
+            | \s*(?P<assignment>[^;]*;)\s*
+            | \s*(?P<expression>[^;]*;)(?P<routine>[^;]*;)\s*
             | \s*(?P<expression>[^;]*;)\s*
             | \s*(?P<return>[^;]*;)\s*
 
-<expression> ::= (?P<type>\w+)\s+(?P<identifier>\w+)\s*(?P<op>\S+)\s*(?P<expression>[^;]*;)
+<assignment> ::= (?P<type>\w+)\s+(?P<identifier>\w+)\s*=\s*(?P<expression>[^;]*;)
+
+<expression> ::= (?P<identifier>\w+)\s*(?P<op>\S+)\s*(?P<expression>[^;]*;)
                | (?P<value>\w+);
 
 <return> ::= return\s+(?P<value>\w+);
 
-<op> ::= \+|-|\*|/|=|<=|<|>=|>
+<op> ::= \+|-|\*|/|==|<=|<|>=|>
 
 <type> ::= int
 
