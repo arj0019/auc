@@ -14,6 +14,11 @@
                 "identifier": "x"
               }
             ],
+            "op": [
+              {
+                "op": "="
+              }
+            ],
             "expression": [
               {
                 "expression": {
@@ -42,6 +47,11 @@
                   "identifier": [
                     {
                       "identifier": "y"
+                    }
+                  ],
+                  "op": [
+                    {
+                      "op": "="
                     }
                   ],
                   "expression": [

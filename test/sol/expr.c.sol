@@ -14,6 +14,11 @@
                 "identifier": "x"
               }
             ],
+            "op": [
+              {
+                "op": "="
+              }
+            ],
             "expression": [
               {
                 "expression": {

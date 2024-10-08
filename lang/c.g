@@ -6,10 +6,12 @@
             | (?P<expression>[^;]*;)
             | (?P<return>[^;]*;)
 
-<expression> ::= (?P<type>\w+)\s+(?P<identifier>\w+)\s*=\s*(?P<expression>[^;]*;)
+<expression> ::= (?P<type>\w+)\s+(?P<identifier>\w+)\s*(?P<op>\S+)\s*(?P<expression>[^;]*;)
                | (?P<value>\w+);
 
 <return> ::= return\s+(?P<value>\w+);
+
+<op> ::= \+|-|\*|/|=|<=|<|>=|>
 
 <type> ::= int
 
