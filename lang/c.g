@@ -1,10 +1,10 @@
 .del (\n|\t)
 
-<function> ::= (?P<type>\w+)\s+(?P<identifier>\w+)\(\)\s*\{\s*(?P<routine>.*?)\s*\}
+<function> ::= (?P<type>\w+)\s+(?P<identifier>\w+)\(\)\s*\{(?P<routine>.*?)\}
 
-<routine> ::= (?P<expression>[^;]*;)(?P<routine>[^;]*;)
-            | (?P<expression>[^;]*;)
-            | (?P<return>[^;]*;)
+<routine> ::= \s*(?P<expression>[^;]*;)(?P<routine>[^;]*;)\s*
+            | \s*(?P<expression>[^;]*;)\s*
+            | \s*(?P<return>[^;]*;)\s*
 
 <expression> ::= (?P<type>\w+)\s+(?P<identifier>\w+)\s*(?P<op>\S+)\s*(?P<expression>[^;]*;)
                | (?P<value>\w+);
