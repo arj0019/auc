@@ -1,9 +1,9 @@
 [
   {
     "routine": {
-      "expression": [
+      "assignment": [
         {
-          "expression": {
+          "assignment": {
             "type": [
               {
                 "type": "int"
@@ -12,11 +12,6 @@
             "identifier": [
               {
                 "identifier": "x"
-              }
-            ],
-            "op": [
-              {
-                "op": "="
               }
             ],
             "expression": [
@@ -36,9 +31,9 @@
       "routine": [
         {
           "routine": {
-            "expression": [
+            "assignment": [
               {
-                "expression": {
+                "assignment": {
                   "type": [
                     {
                       "type": "int"
@@ -47,11 +42,6 @@
                   "identifier": [
                     {
                       "identifier": "y"
-                    }
-                  ],
-                  "op": [
-                    {
-                      "op": "="
                     }
                   ],
                   "expression": [

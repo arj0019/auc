@@ -4,11 +4,6 @@
       "expression": [
         {
           "expression": {
-            "type": [
-              {
-                "type": "int"
-              }
-            ],
             "identifier": [
               {
                 "identifier": "x"
@@ -39,11 +34,6 @@
             "expression": [
               {
                 "expression": {
-                  "type": [
-                    {
-                      "type": "int"
-                    }
-                  ],
                   "identifier": [
                     {
                       "identifier": "y"

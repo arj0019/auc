@@ -14,9 +14,9 @@
       "routine": [
         {
           "routine": {
-            "expression": [
+            "assignment": [
               {
-                "expression": {
+                "assignment": {
                   "type": [
                     {
                       "type": "int"
@@ -25,11 +25,6 @@
                   "identifier": [
                     {
                       "identifier": "a"
-                    }
-                  ],
-                  "op": [
-                    {
-                      "op": "="
                     }
                   ],
                   "expression": [
