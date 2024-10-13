@@ -8,11 +8,10 @@ import shutil
 TERMSIZE = shutil.get_terminal_size()  # get the terminal size for formatting
 
 
-DEL = r'^\s*\.del\s+(.+)$'
-BNF = r'<(\w+)>\s*::=\s*(.*?)\s*(?=<\w+>\s*::=|$)'
-
-
 class Parser():
+  DEL = r'\.del(.+?)(?=\.\w+::=|$)'
+  FMT = r'\.fmt(\w+)::=(.*?)(?=\.\w+::=|$)'
+
   def __init__(self, grammar:str, **kwargs):
     """ Initialize a parser from a given grammar and configuation.
 
@@ -26,11 +25,13 @@ class Parser():
     self.reduce = kwargs.get('reduce', False)
 
   def _parse_grammar(self, grammar):
-    match = re.search(DEL, grammar, re.MULTILINE)
-    self._del = match.group(1) if match else ''
-
     grammar = re.sub(r'\s+', '', grammar)
-    grammar = re.findall(BNF, grammar)
+
+    match = re.search(Parser.DEL, grammar, re.MULTILINE)
+    self._del = match.group(1) if match else ''
+    print(f"{Parser.DEL=}, {self._del=}")
+
+    grammar = re.findall(Parser.FMT, grammar)
     grammar = [(sym, re.split(r'\|', expr)) for sym, expr in grammar]
     return OrderedDict(grammar)
 
