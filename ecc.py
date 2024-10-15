@@ -1,5 +1,6 @@
 import argparse
 from collections import OrderedDict
+import logging
 import pprint
 import re
 import shutil
@@ -8,46 +9,52 @@ import shutil
 TERMSIZE = shutil.get_terminal_size()  # get the terminal size for formatting
 
 
-class Parser():
-  DEL = r'\.del(.+?)(?=\.\w+::=|$)'
-  FMT = r'\.fmt(\w+)::=(.*?)(?=\.\w+::=|$)'
+DEL = r'\.del\s+(?P<expr>.+?)(?=\.\w+\s+|$)'
+FMT = r'\.fmt\s+(?P<sym>\w+)\s*::=\s*(?P<expr>.*?)(?=\.\w+\s+|$)'
+MAP = r'\.map\s+(?P<sym>\w+)\s*::=\s*(?P<expr>.*?)(?=\.\w+\s+|$)'
 
-  def __init__(self, grammar:str, **kwargs):
-    """ Initialize a parser from a given grammar and configuation.
+
+class Parser():
+
+  def __init__(self, grammar, **kwargs):
+    """ Initialize a parser with a given grammar and configuation.
 
     Args:
       grammar (str): lanugage grammar formatted as BNF+RE
-
-    KwArgs:
-      reduce (bool): reduce nested lists and dictionaries
     """
-    self.grammar = self._parse_grammar(grammar)
-    self.reduce = kwargs.get('reduce', False)
+    grammar = re.sub(r'(\n|\t)', '', grammar)
 
-  def _parse_grammar(self, grammar):
-    grammar = re.sub(r'\s+', '', grammar)
+    _del = re.search(DEL, grammar, re.MULTILINE)
+    self._del = _del.group('expr') if _del else ''
 
-    match = re.search(Parser.DEL, grammar, re.MULTILINE)
-    self._del = match.group(1) if match else ''
-    print(f"{Parser.DEL=}, {self._del=}")
+    sfmt = re.findall(FMT, grammar)
+    sfmt = [(sym, re.split(r'\s*\|\s*', expr)) for sym, expr in sfmt]
+    self.sfmt = OrderedDict(sfmt)
+    logging.info(hformat('GRAMMAR', dict(self.sfmt)))
 
-    grammar = re.findall(Parser.FMT, grammar)
-    grammar = [(sym, re.split(r'\|', expr)) for sym, expr in grammar]
-    return OrderedDict(grammar)
+    smap = re.findall(MAP, grammar)
+    smap = [(sym, re.split(r'\s*\|\s*', expr)) for sym, expr in smap]
+    self.smap = OrderedDict(smap)
+    logging.info(hformat('SYNTAX', dict(self.smap)))
 
   def parse(self, source):
-    """ Parse the given source code into an AST with recursive decent.
+    """ Parse the given source code into an AST with recursive decent, that is
+    translated into an internal representation.
 
     Args:
       source (str): source code to parse; formatted according to grammar
 
     Returns:
-      ast (list, dict): abstract syntax tree of the given source code
+      ir (list, dict): internal representation of the given source code
     """
     _source = self.preprocess(source)
-    ast = self._parse(_source, self.grammar.items())
-    if self.reduce: ast = self._reduce(ast)
-    return ast
+    ast = Parser._reduce(self._parse(_source, self.sfmt.items()))
+    logging.info(hformat('AST', ast))
+
+    ir = self._translate(ast)
+    # TODO: -v print internal representation
+
+    return ir
 
   def preprocess(self, source):
     """Modify given source code according to grammar configuration
@@ -75,6 +82,7 @@ class Parser():
     while source:  # sequentially match source to grammar
       for sym, exprs in targets:
         for expr in exprs:
+          #print(f"{sym=}, {expr=}, {source=}")  # debug...
           if not (match := re.match(expr, source, re.DOTALL)): continue
 
           # recursively parse subexpressions (grammar references)
@@ -83,7 +91,7 @@ class Parser():
             if (_match := match.groupdict().items()):
               for _sym, _expr in _match:
                 if not _expr: continue
-                _targets = {_sym: self.grammar[_sym]}.items()
+                _targets = {_sym: self.sfmt[_sym]}.items()
                 _ast[sym][_sym] = self._parse(_expr, _targets)
             else:
               _ast[sym] = match.group(0)
@@ -96,7 +104,10 @@ class Parser():
       else: raise SyntaxError(f"@ln:col ({source})")
     return ast
 
-  def _reduce(self, struct):
+  def _translate(self, ast): return ast
+
+  @staticmethod
+  def _reduce(struct):
     """ Recursively reduce nested lists and dictionaries.
 
     Reduce any list with a single element to that element.
@@ -107,7 +118,7 @@ class Parser():
     """
     if isinstance(struct, list):
       # recursively reduce lists by element(s)
-      _struct = [self._reduce(item) for item in struct]
+      _struct = [Parser._reduce(item) for item in struct]
 
       # if a list has one element, replace it with that element
       if len(_struct) == 1: return _struct[0]
@@ -116,7 +127,7 @@ class Parser():
     elif isinstance(struct, dict):
       _struct = {}
       for key, value in struct.items():  # Recursively reduce dictionaries by key
-        _value = self._reduce(value)
+        _value = Parser._reduce(value)
         if (isinstance(_value, dict) and len(_value) == 1 and key in _value):
           _struct[key] = _value[key]
         else: _struct[key] = _value
@@ -125,23 +136,34 @@ class Parser():
     else: return struct
 
 
-def printh(header, body):
-  print(f"--- {header} {'-' * (TERMSIZE.columns - len(header) - 5)}\n{body}")
+class Optimizer():
+  def __init__(self, **kwargs):
+    """ Initialize an optimizer with a given configuration. """
+
+  def optimize(ir): return ir
+
+
+class Generator(): pass
+
+
+def hformat(header, body, **kwargs):
+  header = f"--- {header} {'-' * (TERMSIZE.columns - len(header) - 5)}\n"
+  return header + pprint.pformat(body, sort_dicts=False, **kwargs)
 
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(prog='ecc', description='x86 assembly compilers generated from Backus Naur grammar extended with regular expressions')
   parser.add_argument('grammar', help='language grammar file path')
   parser.add_argument('source', help='source code file path')
-  parser.add_argument('-r', '--reduce', action='store_true', help='reduce the ast')
-  parser.add_argument('-v', '--verbose', action='store_true', help='enable verbose output')
-
+  parser.add_argument('-v', '--verbose', default='WARNING',
+                      choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+                      help="Set the logging level (default: WARNING).")
   args = parser.parse_args()
 
+  logging.basicConfig(level=args.verbose, format=f'%(message)s')
+
   with open(args.grammar, 'r') as file: _grammar = file.read()
-  parser = Parser(_grammar, reduce=args.reduce)
-  if (args.verbose): printh('GRAMAMR', pprint.pformat(dict(parser.grammar), sort_dicts=False))
+  parser = Parser(_grammar)
 
   with open(args.source, 'r') as file: source = file.read()
   ast = parser.parse(source)
-  if (args.verbose): printh('SYNTAX', pprint.pformat(ast, sort_dicts=False))
