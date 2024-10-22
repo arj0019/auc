@@ -9,9 +9,12 @@ import shutil
 TERMSIZE = shutil.get_terminal_size()  # get the terminal size for formatting
 
 
-DEL = r'\.del\s+(?P<expr>.+?)(?=\.\w+\s+|$)'
-FMT = r'\.fmt\s+(?P<sym>\w+)\s*::=\s*(?P<expr>.*?)(?=\.\w+\s+|$)'
-MAP = r'\.map\s+(?P<sym>\w+)\s*::=\s*(?P<expr>.*?)(?=\.\w+\s+|$)'
+DEL = r'\.del\s+(?P<exprs>.+?)(?=\.\w+\s+|$)'
+FMT = r'\.fmt\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
+MAP = r'\.map\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
+INS = r'(?P<key>\$?\w+)(?:\s+(?P<tgt>\$?\w+))?\s*(?:,\s*(?P<src>\$?\w+))?'
+
+OR = r'\s*\|\s*'
 
 
 class Parser():
@@ -25,17 +28,17 @@ class Parser():
     grammar = re.sub(r'(\n|\t)', '', grammar)
 
     _del = re.search(DEL, grammar, re.MULTILINE)
-    self._del = _del.group('expr') if _del else ''
+    self._del = _del.group('exprs') if _del else ''
 
-    sfmt = re.findall(FMT, grammar)
-    sfmt = [(sym, re.split(r'\s*\|\s*', expr)) for sym, expr in sfmt]
+    sfmt = [(sym, re.split(OR, exprs)) for sym, exprs in re.findall(FMT, grammar)]
     self.sfmt = OrderedDict(sfmt)
-    logging.info(hformat('GRAMMAR', dict(self.sfmt)))
+    logging.info(hformat('Source Grammar', dict(self.sfmt)))
 
-    smap = re.findall(MAP, grammar)
-    smap = [(sym, re.split(r'\s*\|\s*', expr)) for sym, expr in smap]
+    smap = [(sym, re.split(OR, expr)) for sym, expr in re.findall(MAP, grammar)]
+    smap = [(sym, [re.match(INS, expr).groupdict() for expr in exprs]) for sym, exprs in smap]
+
     self.smap = OrderedDict(smap)
-    logging.info(hformat('SYNTAX', dict(self.smap)))
+    logging.info(hformat('Source Map', dict(self.smap)))
 
   def parse(self, source):
     """ Parse the given source code into an AST with recursive decent, that is
@@ -49,10 +52,10 @@ class Parser():
     """
     _source = self.preprocess(source)
     ast = Parser._reduce(self._parse(_source, self.sfmt.items()))
-    logging.info(hformat('AST', ast))
+    logging.info(hformat('Abstract Syntax', ast))
 
     ir = self._translate(ast)
-    # TODO: -v print internal representation
+    logging.info(hformat('Internal Representation', ir))
 
     return ir
 
