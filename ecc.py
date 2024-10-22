@@ -150,7 +150,7 @@ class Generator(): pass
 
 
 def hformat(header, body, **kwargs):
-  header = f"--- {header} {'-' * (TERMSIZE.columns - len(header) - 5)}\n"
+  header = f"――― {header} {'―' * (TERMSIZE.columns - len(header) - 5)}\n"
   return header + pprint.pformat(body, sort_dicts=False, **kwargs)
 
 
