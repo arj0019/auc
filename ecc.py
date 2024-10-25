@@ -12,7 +12,7 @@ TERMSIZE = shutil.get_terminal_size()  # get the terminal size for formatting
 DEL = r'\.del\s+(?P<exprs>.+?)(?=\.\w+\s+|$)'
 FMT = r'\.fmt\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
 MAP = r'\.map\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
-INS = r'(?P<key>\$?\w+)(?:\s+(?P<tgt>\$?\w+))?\s*(?:,\s*(?P<src>\$?\w+))?'
+INS = r'(?P<key>[&$]?\w+)(?:\s+(?P<tgt>[&$]?\w+))?\s*(?:,\s*(?P<src>[&$]?\w+))?'
 
 OR = r'\s*\|\s*'
 
@@ -107,7 +107,38 @@ class Parser():
       else: raise SyntaxError(f"@ln:col ({source})")
     return ast
 
-  def _translate(self, ast): return ast
+  def _translate(self, ast):
+    """ Translate the given AST into an internal representation.
+
+    Args:
+      ast (list, dict): abstract syntax tree of the given source code
+
+    Returns:
+      ir (list, dict): internal representation of the given source code
+    """
+    print("--- TRANSLATION ---------------------------------------------------")
+    for sym, attrs in ast.items():
+
+      for var, expr in enumerate(self.sfmt[sym]):
+        pattern = re.compile(expr)
+        groups = pattern.groupindex.keys()
+        if not isinstance(attrs, dict) and attrs == expr: break
+        elif not isinstance(attrs, dict): continue
+        elif set(attrs.keys()) == set(groups): break
+      
+      _map = self.smap[sym][var]
+      key = _map.pop('key')
+      if key.startswith('&'): key = self._translate({key[1:]: attrs[key[1:]]})
+      if key.startswith('$'): key = attrs
+
+      ir = {key: {attr: val for attr, val in _map.items() if val}}
+      if not ir[key]: return key
+      for attr, val in ir[key].items():
+        if val.startswith('&'): ir[key][attr] = self._translate({val[1:]: attrs[val[1:]]})
+        elif val.startswith('$'): ir[key][attr] = val
+
+    print("--- TRANSLATION ---------------------------------------------------")
+    return ir
 
   @staticmethod
   def _reduce(struct):
@@ -169,4 +200,7 @@ if __name__ == '__main__':
   parser = Parser(_grammar)
 
   with open(args.source, 'r') as file: source = file.read()
-  ast = parser.parse(source)
+  ir = parser.parse(source)
+
+  optimizer = Optimizer()
+  ir = optimizer.optimize()
