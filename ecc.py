@@ -85,7 +85,7 @@ class Parser():
     while source:  # sequentially match source to grammar
       for sym, exprs in targets:
         for expr in exprs:
-          #print(f"{sym=}, {expr=}, {source=}")  # debug...
+          logging.debug(f"{sym=}, {expr=}, {source=}")
           if not (match := re.match(expr, source, re.DOTALL)): continue
 
           # recursively parse subexpressions (grammar references)
