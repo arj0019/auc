@@ -15,6 +15,7 @@ MAP = r'\.map\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
 INS = r'(?P<key>[&$]?\w+)(?:\s+(?P<tgt>[&$]?\w+))?\s*(?:,\s*(?P<src>[&$]?\w+))?'
 
 OR = r'\s*\|\s*'
+AND = r'\s*;\s*'
 
 
 class Parser():
@@ -34,8 +35,10 @@ class Parser():
     self.sfmt = OrderedDict(sfmt)
     logging.info(hformat('Source Grammar', dict(self.sfmt)))
 
-    smap = [(sym, re.split(OR, expr)) for sym, expr in re.findall(MAP, grammar)]
-    smap = [(sym, [re.match(INS, expr).groupdict() for expr in exprs]) for sym, exprs in smap]
+    smap = {sym: [[re.match(INS, expr).groupdict()
+                   for expr in re.split(AND, exprs) if expr]
+                  for exprs in re.split(OR, exprss)]
+            for sym, exprss in re.findall(MAP, grammar)}
 
     self.smap = OrderedDict(smap)
     logging.info(hformat('Source Map', dict(self.smap)))
@@ -81,7 +84,7 @@ class Parser():
     Returns:
       ast (list, dict): abstract syntax tree of the given source code
     """
-    ast = [];
+    ast = []
     while source:  # sequentially match source to grammar
       for sym, exprs in targets:
         for expr in exprs:
@@ -116,29 +119,27 @@ class Parser():
     Returns:
       ir (list, dict): internal representation of the given source code
     """
-    print("--- TRANSLATION ---------------------------------------------------")
-    for sym, attrs in ast.items():
+    ir = []
+    for _ast in ast if isinstance(ast, list) else [ast]:
+      for sym, attrs in _ast.items():
+        for var, expr in enumerate(self.sfmt[sym]):
+          groups = re.compile(expr).groupindex.keys()
+          if isinstance(attrs, dict) and set(attrs.keys()) == set(groups): break
+          elif not isinstance(attrs, dict) and re.match(expr, attrs): break
 
-      for var, expr in enumerate(self.sfmt[sym]):
-        pattern = re.compile(expr)
-        groups = pattern.groupindex.keys()
-        if not isinstance(attrs, dict) and attrs == expr: break
-        elif not isinstance(attrs, dict): continue
-        elif set(attrs.keys()) == set(groups): break
-      
-      _map = self.smap[sym][var]
-      key = _map.pop('key')
-      if key.startswith('&'): key = self._translate({key[1:]: attrs[key[1:]]})
-      if key.startswith('$'): key = attrs
+        for ins in self.smap[sym][var]:
+          if (key := ins['key']).startswith('&'):
+            key = self._translate({key[1:]: attrs[key[1:]]})
+          elif key.startswith('$'): key = attrs
 
-      ir = {key: {attr: val for attr, val in _map.items() if val}}
-      if not ir[key]: return key
-      for attr, val in ir[key].items():
-        if val.startswith('&'): ir[key][attr] = self._translate({val[1:]: attrs[val[1:]]})
-        elif val.startswith('$'): ir[key][attr] = val
+          ins = {attr: val for attr, val in ins.items()
+                 if (attr != 'key') and (val != None)}
+          if not ins: ir.append(key); continue
 
-    print("--- TRANSLATION ---------------------------------------------------")
-    return ir
+          ir.append({key: {attr: (self._translate({val[1:]: attrs[val[1:]]})
+                                  if val.startswith('&') else val)
+                     for attr, val in ins.items()}})
+    return ir if len(ir) > 1 else ir[0]
 
   @staticmethod
   def _reduce(struct):

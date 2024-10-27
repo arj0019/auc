@@ -1,5 +1,12 @@
 .del (\n|\t)
 
+.fmt routine ::= \s*(?P<expression>[^;]*;)(?P<routine>[^;]*;)
+               | \s*(?P<expression>[^;]*;)
+               | \s*(?P<return>[^;]*;)
+.map routine ::= &expression; &routine
+               | &expression
+               | &return
+
 .fmt expression ::= (?P<type>\w+)\s+(?P<identifier>\w+)\s*(?P<op>\S+)\s*(?P<expression>[^;]*;)
                   | (?P<identifier>\w+)\s*(?P<op>\S+)\s*(?P<expression>[^;]*;)
                   | (?P<value>\w+)\s*(?P<op>\S+)\s*(?P<expression>[^;]*;)
