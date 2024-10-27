@@ -1,8 +1,8 @@
 .del (\n|\t)
 
-.fmt routine ::= \s*(?P<expression>[^;]*;)(?P<routine>[^;]*;)
-               | \s*(?P<expression>[^;]*;)
-               | \s*(?P<return>[^;]*;)
+.fmt routine ::= \s*(?P<expression>[^;]*;)(?P<routine>.*;)
+               | \s*(?P<expression>.*;)
+               | \s*(?P<return>.*;)
 .map routine ::= &expression; &routine
                | &expression
                | &return
