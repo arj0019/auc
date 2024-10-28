@@ -20,7 +20,9 @@
                   | &value
 
 .fmt return ::= return\s+(?P<value>\w+);
+              | return\s+(?P<identifier>\w+);
 .map return ::= RET &value
+              | RET &identifier
 
 .fmt op ::= =|\+|-|\*|/
 .map op ::= MOV|ADD|SUB|MUL|DIV
