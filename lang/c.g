@@ -19,9 +19,11 @@
                   | &op &value, &expression
                   | &value
 
-.fmt return ::= return\s+(?P<value>\w+);
+.fmt return ::= return\s+(?P<expression>[^;]*;)
+              | return\s+(?P<value>\w+);
               | return\s+(?P<identifier>\w+);
-.map return ::= RET &value
+.map return ::= RET &expression
+              | RET &value
               | RET &identifier
 
 .fmt op ::= =|\+|-|\*|/
