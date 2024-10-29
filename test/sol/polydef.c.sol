@@ -1,64 +1,12 @@
 [
   {
-    "function": {
-      "type": [
-        {
-          "type": "int"
-        }
-      ],
-      "identifier": [
-        {
-          "identifier": "foo"
-        }
-      ],
-      "routine": [
-        {
-          "routine": {
-            "return": [
-              {
-                "return": {
-                  "value": [
-                    {
-                      "value": "0"
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
+    "RET": {
+      "tgt": "0"
     }
   },
   {
-    "function": {
-      "type": [
-        {
-          "type": "int"
-        }
-      ],
-      "identifier": [
-        {
-          "identifier": "bar"
-        }
-      ],
-      "routine": [
-        {
-          "routine": {
-            "return": [
-              {
-                "return": {
-                  "value": [
-                    {
-                      "value": "1"
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
+    "RET": {
+      "tgt": "1"
     }
   }
 ]

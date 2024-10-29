@@ -1,66 +1,37 @@
 [
   {
-    "routine": {
-      "expression": [
-        {
-          "expression": {
-            "identifier": [
-              {
-                "identifier": "x"
-              }
-            ],
-            "op": [
-              {
-                "op": "+"
-              }
-            ],
-            "expression": [
-              {
-                "expression": {
-                  "value": [
-                    {
-                      "value": "0"
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "routine": [
-        {
-          "routine": {
-            "expression": [
-              {
-                "expression": {
-                  "identifier": [
-                    {
-                      "identifier": "y"
-                    }
-                  ],
-                  "op": [
-                    {
-                      "op": "/"
-                    }
-                  ],
-                  "expression": [
-                    {
-                      "expression": {
-                        "value": [
-                          {
-                            "value": "1"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
+    "MOV": {
+      "tgt": "x",
+      "src": "1"
     }
-  }
+  },
+  [
+    {
+      "MOV": {
+        "tgt": "y",
+        "src": {
+          "MUL": {
+            "tgt": "x",
+            "src": "2"
+          }
+        }
+      }
+    },
+    {
+      "MOV": {
+        "tgt": "z",
+        "src": {
+          "ADD": {
+            "tgt": "x",
+            "src": {
+              "DIV": {
+                "tgt": "y",
+                "src": "3"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 ]

@@ -1,66 +1,18 @@
 [
   {
-    "function": {
-      "type": [
-        {
-          "type": "int"
+    "MOV": {
+      "tgt": "a",
+      "src": "1"
+    }
+  },
+  {
+    "RET": {
+      "tgt": {
+        "ADD": {
+          "tgt": "a",
+          "src": "2"
         }
-      ],
-      "identifier": [
-        {
-          "identifier": "main"
-        }
-      ],
-      "routine": [
-        {
-          "routine": {
-            "assignment": [
-              {
-                "assignment": {
-                  "type": [
-                    {
-                      "type": "int"
-                    }
-                  ],
-                  "identifier": [
-                    {
-                      "identifier": "a"
-                    }
-                  ],
-                  "expression": [
-                    {
-                      "expression": {
-                        "value": [
-                          {
-                            "value": "0"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              }
-            ],
-            "routine": [
-              {
-                "routine": {
-                  "return": [
-                    {
-                      "return": {
-                        "value": [
-                          {
-                            "value": "0"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
+      }
     }
   }
 ]
