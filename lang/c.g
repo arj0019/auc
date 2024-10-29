@@ -4,8 +4,8 @@
 .map function ::= &routine
 
 .fmt routine ::= \s*(?P<expression>[^;]*;)(?P<routine>.*;)
-               | \s*(?P<expression>.*;)
-               | \s*(?P<return>.*;)
+               | \s*(?P<expression>[^;]*;)
+               | \s*(?P<return>[^;]*;)
 .map routine ::= &expression; &routine
                | &expression
                | &return
