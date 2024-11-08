@@ -19,12 +19,11 @@ AND = r'\s*;\s*'
 
 
 class Parser():
-
   def __init__(self, grammar, **kwargs):
-    """ Initialize a parser with a given grammar and configuation.
+    """ Initialize a source code parser from a given source language grammar.
 
     Args:
-      grammar (str): lanugage grammar formatted as BNF+RE
+      grammar (str): source language grammar
     """
     grammar = re.sub(r'(\n|\t)', '', grammar)
 
@@ -173,12 +172,22 @@ class Parser():
 
 class Optimizer():
   def __init__(self, **kwargs):
-    """ Initialize an optimizer with a given configuration. """
+    """ Initialize an internal representation optimizer. """
 
-  def optimize(ir): return ir
+  def optimize(self, ir): return ir
 
 
-class Generator(): pass
+class Generator():
+  def __init__(self, grammar, **kwargs):
+    """ Initialize a code generator from a given target language grammar.
+
+    Args:
+      grammar (str): target language grammar
+    """
+    grammar = re.sub(r'(\n|\t)', '', grammar)
+
+    _del = re.search(DEL, grammar, re.MULTILINE)
+    self._del = _del.group('exprs') if _del else ''
 
 
 def hformat(header, body, **kwargs):
@@ -188,8 +197,9 @@ def hformat(header, body, **kwargs):
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(prog='ecc', description='x86 assembly compilers generated from Backus Naur grammar extended with regular expressions')
-  parser.add_argument('grammar', help='language grammar file path')
-  parser.add_argument('source', help='source code file path')
+  parser.add_argument('source', help='source grammar file path')
+  parser.add_argument('target', help='target grammar file path')
+  parser.add_argument('code', help='source code file path')
   parser.add_argument('-v', '--verbose', default='WARNING',
                       choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                       help="Set the logging level (default: WARNING).")
@@ -197,11 +207,14 @@ if __name__ == '__main__':
 
   logging.basicConfig(level=args.verbose, format=f'%(message)s')
 
-  with open(args.grammar, 'r') as file: _grammar = file.read()
-  parser = Parser(_grammar)
+  with open(args.source, 'r') as file: sgrammar = file.read()
+  parser = Parser(sgrammar)
 
-  with open(args.source, 'r') as file: source = file.read()
+  with open(args.code, 'r') as file: source = file.read()
   ir = parser.parse(source)
 
   optimizer = Optimizer()
-  ir = optimizer.optimize()
+  ir = optimizer.optimize(ir)
+
+  with open(args.target, 'r') as file: tgrammar = file.read()
+  generator = Generator(tgrammar)
