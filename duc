@@ -10,4 +10,4 @@ else
     exit 1
 fi
 
-$PYTHON ecc.py "./src/c.g" "$@"
+$PYTHON ecc.py "./src/c.s" "$@"
