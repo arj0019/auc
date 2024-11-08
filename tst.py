@@ -6,7 +6,7 @@ from ecc import Parser
 
 SRC = './src/'  # Directory where grammar files are located (<lang>.g)
 TGT = './tgt/'  # Directory where grammar files are located (<lang>.g)
-TST = './test/'  # Directory where source files are located (<src>.<lang>)
+TST = './tst/'  # Directory where source files are located (<src>.<lang>)
 
 VALIDATE = os.environ.get('VALIDATE', False)
 
