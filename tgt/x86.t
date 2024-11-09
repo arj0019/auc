@@ -1,4 +1,11 @@
 .del (\n|\t)
 
-.map return ::= RET &tgt
-.fmt return ::= mov eax, {tgt}\nret
+.map MOV ::= MOV *tgt, #src
+           | MOV *tgt, *src
+.fmt MOV ::= mov &tgt, $src
+           | mov &tgt, &src
+
+.map RET ::= RET #tgt
+           | RET *tgt
+.fmt RET ::= mov eax, $tgt\nret
+           | mov eax, &tgt\nret
