@@ -13,10 +13,12 @@
 .fmt expression ::= (?P<type>\w+)\s+(?P<identifier>\w+)\s*(?P<op>\S+)\s*(?P<expression>[^;]*;)
                   | (?P<identifier>\w+)\s*(?P<op>\S+)\s*(?P<expression>[^;]*;)
                   | (?P<value>\w+)\s*(?P<op>\S+)\s*(?P<expression>[^;]*;)
+                  | (?P<identifier>\w+);
                   | (?P<value>\w+);
 .map expression ::= &op &identifier, &expression
                   | &op &identifier, &expression
                   | &op &value, &expression
+                  | &identifier
                   | &value
 
 .fmt return ::= return\s+(?P<expression>[^;]*;)
