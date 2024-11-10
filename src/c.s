@@ -1,7 +1,7 @@
 .del (\n|\t)
 
 .fmt function ::= \s*(?P<type>\w+)\s+(?P<identifier>\w+)\(\)\s*\{(?P<routine>.*?)\}
-.map function ::= &routine
+.map function ::= LOC &identifier; &routine
 
 .fmt routine ::= \s*(?P<expression>[^;]*;)(?P<routine>.*;)
                | \s*(?P<expression>[^;]*;)

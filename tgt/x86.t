@@ -1,5 +1,8 @@
 .del (\n|\t)
 
+.map LOC ::= LOC #tgt
+.fmt LOC ::= $tgt:
+
 .map MOV ::= MOV *tgt, !src
            | MOV *tgt, *src
            | MOV *tgt, #src
