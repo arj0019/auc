@@ -14,25 +14,38 @@
            | ADD #tgt, !src
            | ADD #tgt, *src
            | ADD #tgt, #src
-.fmt ADD ::= mov %rax, &tgt;
-             &src:%rbx;
-             add %rax, %rbx
-           | mov %rax, &tgt;
-             add %rax, &src
-           | mov %rax, &tgt;
-             add %rax, $src
-           | mov %rax, $tgt;
-             &src:%rbx;
-             add %rax, %rbx
-           | mov %rax, $tgt;
-             add %rax, &src
-           | mov %rax, $tgt;
-             add %rax, $src
+.fmt ADD ::= sub %rbp, 8
+             mov [%rbp], &tgt;
+             &src;
+             add [%rbp], [%rbp-8]
+             add %rbp, 8
+           | sub %rbp, 8
+             mov [%rbp], &tgt;
+             add [%rbp], &src
+             add %rbp, 8
+           | sub %rbp, 8
+             mov [%rbp], &tgt;
+             add [%rbp], $src
+             add %rbp, 8
+           | sub rbp, 8
+             mov [rbp], $tgt;
+             &src;
+             add [%rbp], [%rbp-8]
+             add %rbp, 8
+           | sub %rbp, 8
+             mov [%rbp], $tgt;
+             add [%rbp], &src
+             add %rbp, 8
+           | sub rbp, 8
+             mov [%rbp], $tgt;
+             add [%rbp], $src
+             add %rbp, 8
 
 .map RET ::= RET !tgt
            | RET *tgt
            | RET #tgt
-.fmt RET ::= &src:%rax;
+.fmt RET ::= &tgt;
+             mov eax, [%rbp-8]
              ret
            | mov eax, &tgt;
              ret
