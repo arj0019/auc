@@ -35,8 +35,8 @@
 
 .fmt value ::= -?0x[0-9A-Fa-f]+
              | -?[0-9]+
-.map value ::= $value
-             | $value
+.map value ::= #value
+             | #value
 
 .fmt identifier ::= [A-Za-z_][0-9A-Za-z_]*
-.map identifier ::= $identifier
+.map identifier ::= *identifier

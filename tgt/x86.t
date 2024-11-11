@@ -7,7 +7,7 @@
            | MOV *tgt, *src
            | MOV *tgt, #src
 .fmt MOV ::= &src\n
-             mov &tgt, %reg
+             mov &tgt, [%rbp-8]
            | mov &tgt, &src
            | mov &tgt, $src
 

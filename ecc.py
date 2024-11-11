@@ -12,7 +12,7 @@ TERMSIZE = shutil.get_terminal_size()  # get the terminal size for formatting
 DEL = r'\.del\s+(?P<exprs>.+?)(?=\.\w+\s+|$)'
 FMT = r'\.fmt\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
 MAP = r'\.map\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
-INS = r'(?P<key>[&$]?\w+)(?:\s+(?P<tgt>[&$]?\w+))?\s*(?:,\s*(?P<src>[&$]?\w+))?'
+INS = r'(?P<key>[&*#]?\w+)(?:\s+(?P<tgt>[&*#]?\w+))?\s*(?:,\s*(?P<src>[&*#]?\w+))?'
 
 OR = r'\s*\|\s*'
 AND = r'\s*;\s*'
@@ -129,7 +129,8 @@ class Parser():
         for ins in self.smap[sym][var]:
           if (key := ins['key']).startswith('&'):
             key = self._translate({key[1:]: attrs[key[1:]]})
-          elif key.startswith('$'): key = attrs
+          elif key.startswith('#'): key = r'#' + attrs
+          elif key.startswith('*'): key = r'*' + attrs
 
           ins = {attr: val for attr, val in ins.items()
                  if (attr != 'key') and (val != None)}
