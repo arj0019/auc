@@ -211,7 +211,7 @@ if __name__ == '__main__':
   parser.add_argument('target', help='target grammar file path')
   parser.add_argument('code', help='source code file path')
   parser.add_argument('-v', '--verbose', default='WARNING',
-                      choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+                      choices=['INFO', 'WARNING', 'ERROR'],
                       help="Set the logging level (default: WARNING).")
   args = parser.parse_args()
 
