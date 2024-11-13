@@ -35,10 +35,9 @@ class Parser():
     logging.info(hformat('Source Grammar', dict(self.sfmt)))
 
     smap = {sym: [[re.match(INS, expr).groupdict()
-                   for expr in re.split(AND, exprs) if expr]
+                   for expr in re.split(AND, exprs)]
                   for exprs in re.split(OR, exprss)]
             for sym, exprss in re.findall(MAP, grammar)}
-
     self.smap = OrderedDict(smap)
     logging.info(hformat('Source Map', dict(self.smap)))
 
@@ -129,8 +128,8 @@ class Parser():
         for ins in self.smap[sym][var]:
           if (key := ins['key']).startswith('&'):
             key = self._translate({key[1:]: attrs[key[1:]]})
-          elif key.startswith('#'): key = r'#' + attrs
-          elif key.startswith('*'): key = r'*' + attrs
+          elif key.startswith('#'): key = '#' + attrs
+          elif key.startswith('*'): key = '*' + attrs
 
           ins = {attr: val for attr, val in ins.items()
                  if (attr != 'key') and (val != None)}
@@ -189,6 +188,16 @@ class Generator():
 
     _del = re.search(DEL, grammar, re.MULTILINE)
     self._del = _del.group('exprs') if _del else ''
+
+    tmap = [(sym, re.split(OR, exprs)) for sym, exprs in re.findall(MAP, grammar)]
+    self.tmap = OrderedDict(tmap)
+    logging.info(hformat('Target Map', dict(self.tmap)))
+
+    tfmt = [(sym, [[expr for expr in re.split(AND, exprs)]
+                   for exprs in re.split(OR, exprss)])
+            for sym, exprss in re.findall(FMT, grammar)]
+    self.tfmt = OrderedDict(tfmt)
+    logging.info(hformat('Target Grammar', dict(self.tfmt)))
 
 
 def hformat(header, body, **kwargs):
