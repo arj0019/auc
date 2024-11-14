@@ -198,11 +198,40 @@ class Generator():
                    for exprs in re.split(OR, exprss)])
             for sym, exprss in re.findall(FMT, grammar)]
     self.tfmt = OrderedDict(tfmt)
-    logging.info(hformat('Target Grammar', dict(self.tfmt)))
+    logging.debug(hformat('Target Grammar', dict(self.tfmt)))
+
+  def generate(self, ir):
+    """ Generate target code from the given internal representation with
+    recursive decent.
+
+    Args:
+      ir (list, dict): internal representation of the given source code
+
+    Returns:
+      code (str): generated target code; formatted according to grammar
+    """
+    code = self._generate(ir)
+    logging.info(hformat('Target Code', code))
+    return code
+
+  def _generate(self, ir):
+    code = ""
+    for _ir in ir if isinstance(ir, list) else [ir]:
+      for ins, args in _ir.items():
+        for var, expr in enumerate(self.tmap[ins]):
+          groups = re.compile(expr).groupindex.keys()
+          if isinstance(args, dict) and set(args.keys()) == set(groups): break
+          elif not isinstance(args, dict) and re.match(expr, args): break
+
+        for fmt in self.tfmt[ins][var]:
+          fmt = re.sub(r'\$tgt', args['tgt'][1:], fmt)
+          code += fmt + '\n'
+    return code
 
 
-def hformat(header, body, **kwargs):
-  header = f"――― {header} {'―' * (TERMSIZE.columns - len(header) - 5)}\n"
+def hformat(header, body=None, **kwargs):
+  header = f"――― {header} {'―' * (TERMSIZE.columns - len(header) - 5)}"
+  if isinstance(body, str): return header + body
   return header + pprint.pformat(body, sort_dicts=False, **kwargs)
 
 
@@ -229,3 +258,5 @@ if __name__ == '__main__':
 
   with open(args.target, 'r') as file: tgrammar = file.read()
   generator = Generator(tgrammar)
+
+  code = generator.generate(ir)
