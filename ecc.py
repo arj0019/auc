@@ -32,14 +32,14 @@ class Parser():
 
     sfmt = [(sym, re.split(OR, exprs)) for sym, exprs in re.findall(FMT, grammar)]
     self.sfmt = OrderedDict(sfmt)
-    logging.info(hformat('Source Grammar', dict(self.sfmt)))
+    logging.debug(hformat('Source Grammar', dict(self.sfmt)))
 
     smap = {sym: [[re.match(INS, expr).groupdict()
                    for expr in re.split(AND, exprs)]
                   for exprs in re.split(OR, exprss)]
             for sym, exprss in re.findall(MAP, grammar)}
     self.smap = OrderedDict(smap)
-    logging.info(hformat('Source Map', dict(self.smap)))
+    logging.debug(hformat('Source Map', dict(self.smap)))
 
   def parse(self, source):
     """ Parse the given source code into an AST with recursive decent, that is
@@ -51,16 +51,18 @@ class Parser():
     Returns:
       ir (list, dict): internal representation of the given source code
     """
-    _source = self.preprocess(source)
+    logging.info(hformat('Source Code', source.rstrip('\n')))
+
+    _source = self._preprocess(source)
     ast = Parser._reduce(self._parse(_source, self.sfmt.items()))
     logging.info(hformat('Abstract Syntax', ast))
 
-    ir = self._translate(ast)
+    ir = Parser._reduce(self._translate(ast))
     logging.info(hformat('Internal Representation', ir))
 
     return ir
 
-  def preprocess(self, source):
+  def _preprocess(self, source):
     """Modify given source code according to grammar configuration
 
     Args:
@@ -86,7 +88,6 @@ class Parser():
     while source:  # sequentially match source to grammar
       for sym, exprs in targets:
         for expr in exprs:
-          logging.debug(f"{sym=}, {expr=}, {source=}")
           if not (match := re.match(expr, source, re.DOTALL)): continue
 
           # recursively parse subexpressions (grammar references)
@@ -191,7 +192,7 @@ class Generator():
 
     tmap = [(sym, re.split(OR, exprs)) for sym, exprs in re.findall(MAP, grammar)]
     self.tmap = OrderedDict(tmap)
-    logging.info(hformat('Target Map', dict(self.tmap)))
+    logging.debug(hformat('Target Map', dict(self.tmap)))
 
     tfmt = [(sym, [[expr for expr in re.split(AND, exprs)]
                    for exprs in re.split(OR, exprss)])
@@ -211,7 +212,7 @@ if __name__ == '__main__':
   parser.add_argument('target', help='target grammar file path')
   parser.add_argument('code', help='source code file path')
   parser.add_argument('-v', '--verbose', default='WARNING',
-                      choices=['INFO', 'WARNING', 'ERROR'],
+                      choices=['DEBUG', 'INFO', 'WARNING'],
                       help="Set the logging level (default: WARNING).")
   args = parser.parse_args()
 
