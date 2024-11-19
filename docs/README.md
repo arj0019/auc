@@ -20,7 +20,7 @@ optional arguments:
 ## DUC (pseudo-C x86 compiler)
 DUC is a C-like compiler developed concurrently with the ECC framework that is used to explore and implement compiler construction concepts. The executable is effectively an alias for `ecc.py` with the source and target grammars pre-selected.
 
-For example, the logged output of `./duc -v INFO ./tst/fun.c` is...
+For example, the logged output of `./duc -v DEBUG ./tst/mvp.c` is...
 
 ```
 ――― Source Grammar ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
