@@ -210,7 +210,10 @@ class Generator():
     Returns:
       code (str): generated target code; formatted according to grammar
     """
-    code = self._generate(ir)
+    code = self._generate(ir) \
+               .encode() \
+               .decode('unicode_escape') \
+               .expandtabs(2)
     logging.info(hformat('Target Code', code))
     return code
 
