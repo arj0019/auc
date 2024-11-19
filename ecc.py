@@ -233,7 +233,7 @@ class Generator():
 
 
 def hformat(header, body=None, **kwargs):
-  header = f"――― {header} {'―' * (TERMSIZE.columns - len(header) - 5)}"
+  header = f"――― {header} {'―' * (TERMSIZE.columns - len(header) - 5)}" + '\n'
   if isinstance(body, str): return header + body
   return header + pprint.pformat(body, sort_dicts=False, **kwargs)
 
