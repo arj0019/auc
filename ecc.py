@@ -17,7 +17,7 @@ PPRINT = lambda text: pprint.pformat(text, sort_dicts=False)
 DEL = r'\.del\s+(?P<exprs>.+?)(?=\.\w+\s+|$)'
 FMT = r'\.fmt\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
 MAP = r'\.map\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
-INS = r'(?P<key>[&*#]?\w+)(?:\s+(?P<tgt>[&*#]?\w+))?\s*(?:,\s*(?P<src>[&*#]?\w+))?'
+INS = r'(?P<key>[&*#]?\w+)(?:\s+(?P<tgt>[&*#]\w+))?\s*(?:,\s*(?P<src>[&*#]\w+))?'
 
 OR = r'\s*\|\s*'
 AND = r'\s*;\s*'
@@ -135,6 +135,7 @@ class Parser():
           groups = re.compile(expr).groupindex.keys()
           if isinstance(attrs, dict) and set(attrs.keys()) == set(groups): break
           elif not isinstance(attrs, dict) and re.match(expr, attrs): break
+        else: raise SyntaxError(f"{_ast}")
 
         for ins in self.smap[sym][var]:
           if (key := ins['key']).startswith('&'):
@@ -235,9 +236,12 @@ class Generator():
     for _ir in ir if isinstance(ir, list) else [ir]:
       for ins, args in _ir.items():
         for var, expr in enumerate(self.tmap[ins]):
-          groups = re.compile(expr).groupindex.keys()
-          if isinstance(args, dict) and set(args.keys()) == set(groups): break
-          elif not isinstance(args, dict) and re.match(expr, args): break
+          match = re.match(INS, expr).groupdict()
+          d = {'key':ins}
+          d['tgt'] = args['tgt'][0]+'tgt' if 'tgt' in args else None
+          d['src'] = args['src'][0]+'src' if 'src' in args else None
+          if d == match: break
+        else: raise SyntaxError(f"{_ir}")
 
         for fmt in self.tfmt[ins][var]:
           fmt = re.sub(r'\$tgt', args['tgt'][1:], fmt)
