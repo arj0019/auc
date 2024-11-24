@@ -9,6 +9,11 @@ import shutil
 TERMSIZE = shutil.get_terminal_size()  # get the terminal size for formatting
 
 
+HEADER = lambda text: f"――― {text} {'―' * (TERMSIZE.columns - len(text) - 5)}"
+
+PPRINT = lambda text: pprint.pformat(text, sort_dicts=False)
+
+
 DEL = r'\.del\s+(?P<exprs>.+?)(?=\.\w+\s+|$)'
 FMT = r'\.fmt\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
 MAP = r'\.map\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
@@ -30,16 +35,18 @@ class Parser():
     _del = re.search(DEL, grammar, re.MULTILINE)
     self._del = _del.group('exprs') if _del else ''
 
+    logging.debug(HEADER('Source Grammar'))
     sfmt = [(sym, re.split(OR, exprs)) for sym, exprs in re.findall(FMT, grammar)]
     self.sfmt = OrderedDict(sfmt)
-    logging.debug(hformat('Source Grammar', dict(self.sfmt)))
+    logging.debug(PPRINT(dict(self.sfmt)))
 
+    logging.debug(HEADER('Source Map'))
     smap = {sym: [[re.match(INS, expr).groupdict()
                    for expr in re.split(AND, exprs)]
                   for exprs in re.split(OR, exprss)]
             for sym, exprss in re.findall(MAP, grammar)}
     self.smap = OrderedDict(smap)
-    logging.debug(hformat('Source Map', dict(self.smap)))
+    logging.debug(PPRINT(dict(self.smap)))
 
   def parse(self, source):
     """ Parse the given source code into an AST with recursive decent, that is
@@ -51,14 +58,17 @@ class Parser():
     Returns:
       ir (list, dict): internal representation of the given source code
     """
-    logging.info(hformat('Source Code', source.rstrip('\n')))
+    logging.info(HEADER('Source Code'))
+    logging.info(source.rstrip('\n'))
 
+    logging.info(HEADER('Abstract Syntax'))
     _source = self._preprocess(source)
     ast = Parser._reduce(self._parse(_source, self.sfmt.items()))
-    logging.info(hformat('Abstract Syntax', ast))
+    logging.info(PPRINT(ast))
 
+    logging.info(HEADER('Internal Representation'))
     ir = Parser._reduce(self._translate(ast))
-    logging.info(hformat('Internal Representation', ir))
+    logging.info(PPRINT(ir))
 
     return ir
 
@@ -190,15 +200,17 @@ class Generator():
     _del = re.search(DEL, grammar, re.MULTILINE)
     self._del = _del.group('exprs') if _del else ''
 
+    logging.debug(HEADER('Target Map'))
     tmap = [(sym, re.split(OR, exprs)) for sym, exprs in re.findall(MAP, grammar)]
     self.tmap = OrderedDict(tmap)
-    logging.debug(hformat('Target Map', dict(self.tmap)))
+    logging.debug(PPRINT(dict(self.tmap)))
 
+    logging.debug(HEADER('Target Grammar'))
     tfmt = [(sym, [[expr for expr in re.split(AND, exprs)]
                    for exprs in re.split(OR, exprss)])
             for sym, exprss in re.findall(FMT, grammar)]
     self.tfmt = OrderedDict(tfmt)
-    logging.debug(hformat('Target Grammar', dict(self.tfmt)))
+    logging.debug(PPRINT(dict(self.tfmt)))
 
   def generate(self, ir):
     """ Generate target code from the given internal representation with
@@ -210,11 +222,12 @@ class Generator():
     Returns:
       code (str): generated target code; formatted according to grammar
     """
+    logging.info(HEADER('Target Code'))
     code = self._generate(ir) \
                .encode() \
                .decode('unicode_escape') \
                .expandtabs(2)
-    logging.info(hformat('Target Code', code))
+    logging.info(code)
     return code
 
   def _generate(self, ir):
@@ -230,12 +243,6 @@ class Generator():
           fmt = re.sub(r'\$tgt', args['tgt'][1:], fmt)
           code += fmt + '\n'
     return code
-
-
-def hformat(header, body=None, **kwargs):
-  header = f"――― {header} {'―' * (TERMSIZE.columns - len(header) - 5)}" + '\n'
-  if isinstance(body, str): return header + body
-  return header + pprint.pformat(body, sort_dicts=False, **kwargs)
 
 
 if __name__ == '__main__':
