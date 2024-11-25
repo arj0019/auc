@@ -230,7 +230,7 @@ class Generator():
                .encode() \
                .decode('unicode_escape') \
                .expandtabs(2)
-    for _del in self.tdel: code = re.sub(_del, '', code, flags=re.DOTALL)
+    for _del in self.tdel: code = re.sub(_del, '', code)
     logging.info(code)
     return code
 
