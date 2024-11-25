@@ -17,7 +17,7 @@ PPRINT = lambda text: pprint.pformat(text, sort_dicts=False)
 DEL = r'\.del\s+(?P<exprs>.+?)(?=\.\w+\s+|$)'
 FMT = r'\.fmt\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
 MAP = r'\.map\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
-INS = r'(?P<key>[&*#]?\w+)(?:\s+(?P<tgt>[&*#]\w+))?\s*(?:,\s*(?P<src>[&*#]\w+))?'
+INS = r'(?P<opc>[&*#]?\w+)(?:\s+(?P<tgt>[&*#]\w+))?\s*(?:,\s*(?P<src>[&*#]\w+))?'
 
 OR = r'\s*\|\s*'
 AND = r'\s*;\s*'
@@ -30,6 +30,7 @@ class Parser():
     Args:
       grammar (str): source language grammar
     """
+    grammar = re.sub(r'\s{2,}', '\t', grammar)
     grammar = re.sub(r'(\n|\t)', '', grammar)
 
     _del = re.search(DEL, grammar, re.MULTILINE)
@@ -138,16 +139,16 @@ class Parser():
         else: raise SyntaxError(f"{_ast}")
 
         for ins in self.smap[sym][var]:
-          if (key := ins['key']).startswith('&'):
-            key = self._translate({key[1:]: attrs[key[1:]]})
-          elif key.startswith('#'): key = '#' + attrs
-          elif key.startswith('*'): key = '*' + attrs
+          if (opc := ins['opc']).startswith('&'):
+            opc = self._translate({opc[1:]: attrs[opc[1:]]})
+          elif opc.startswith('#'): opc = '#' + attrs
+          elif opc.startswith('*'): opc = '*' + attrs
 
           ins = {attr: val for attr, val in ins.items()
-                 if (attr != 'key') and (val != None)}
-          if not ins: ir.append(key); continue
+                 if (attr != 'opc') and (val != None)}
+          if not ins: ir.append(opc); continue
 
-          ir.append({key: {attr: (self._translate({val[1:]: attrs[val[1:]]})
+          ir.append({opc: {attr: (self._translate({val[1:]: attrs[val[1:]]})
                                   if val.startswith('&') else val)
                      for attr, val in ins.items()}})
     return ir if len(ir) > 1 else ir[0]
@@ -196,10 +197,8 @@ class Generator():
     Args:
       grammar (str): target language grammar
     """
+    grammar = re.sub(r'\s{2,}', '\t', grammar)
     grammar = re.sub(r'(\n|\t)', '', grammar)
-
-    _del = re.search(DEL, grammar, re.MULTILINE)
-    self._del = _del.group('exprs') if _del else ''
 
     logging.debug(HEADER('Target Map'))
     tmap = [(sym, re.split(OR, exprs)) for sym, exprs in re.findall(MAP, grammar)]
@@ -207,9 +206,7 @@ class Generator():
     logging.debug(PPRINT(dict(self.tmap)))
 
     logging.debug(HEADER('Target Grammar'))
-    tfmt = [(sym, [[expr for expr in re.split(AND, exprs)]
-                   for exprs in re.split(OR, exprss)])
-            for sym, exprss in re.findall(FMT, grammar)]
+    tfmt = [(sym, re.split(OR, exprs)) for sym, exprs in re.findall(FMT, grammar)]
     self.tfmt = OrderedDict(tfmt)
     logging.debug(PPRINT(dict(self.tfmt)))
 
@@ -234,18 +231,23 @@ class Generator():
   def _generate(self, ir):
     code = ""
     for _ir in ir if isinstance(ir, list) else [ir]:
-      for ins, args in _ir.items():
-        for var, expr in enumerate(self.tmap[ins]):
-          match = re.match(INS, expr).groupdict()
-          d = {'key':ins}
-          d['tgt'] = args['tgt'][0]+'tgt' if 'tgt' in args else None
-          d['src'] = args['src'][0]+'src' if 'src' in args else None
-          if d == match: break
+      for opc, args in _ir.items():
+        for var, expr in enumerate(self.tmap[opc]):
+          ins = {'opc':opc, 'tgt':None, 'src':None}
+          for opr in ('tgt', 'src'):
+            if not opr in args: continue
+            if isinstance(args[opr], dict): ins[opr] = f"&{opr}"
+            else: ins[opr] = f"{args['tgt'][0]}{opr}"
+
+          if ins == re.match(INS, expr).groupdict(): break
         else: raise SyntaxError(f"{_ir}")
 
-        for fmt in self.tfmt[ins][var]:
-          fmt = re.sub(r'\$tgt', args['tgt'][1:], fmt)
-          code += fmt + '\n'
+        fmt = self.tfmt[opc][var]
+        for opr in {k:v for k, v in args.items() if k != 'opc'}:
+          if isinstance(args[opr], dict):
+            fmt = re.sub(rf'\&{opr}', self._generate(args[opr]), fmt)
+          else: fmt = re.sub(rf'\${opr}', args[opr][1:], fmt)
+        code += fmt
     return code
 
 
