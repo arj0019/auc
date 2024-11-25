@@ -20,7 +20,7 @@ optional arguments:
 ## DUC (pseudo-C x86 compiler)
 DUC is a C-like compiler developed concurrently with the ECC framework that is used to explore and implement compiler construction concepts. The executable is effectively an alias for `ecc.py` with the source and target grammars pre-selected.
 
-For example, the logged output of `./duc -v DEBUG ./tst/mvp.c` is...
+For example, the logged output of `./duc -v DEBUG ./tst/retexpr.c` is...
 
 ```
 ――― Source Grammar ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
@@ -41,48 +41,56 @@ For example, the logged output of `./duc -v DEBUG ./tst/mvp.c` is...
  'value': ['-?0x[0-9A-Fa-f]+', '-?[0-9]+'],
  'identifier': ['[A-Za-z_][0-9A-Za-z_]*']}
 ――― Source Map ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-{'function': [[{'key': 'LOC', 'tgt': '&identifier', 'src': None},
-               {'key': '&routine', 'tgt': None, 'src': None}]],
- 'routine': [[{'key': '&expression', 'tgt': None, 'src': None},
-              {'key': '&routine', 'tgt': None, 'src': None}],
-             [{'key': '&expression', 'tgt': None, 'src': None}],
-             [{'key': '&return', 'tgt': None, 'src': None}]],
- 'expression': [[{'key': '&op', 'tgt': '&identifier', 'src': '&expression'}],
-                [{'key': '&op', 'tgt': '&identifier', 'src': '&expression'}],
-                [{'key': '&op', 'tgt': '&value', 'src': '&expression'}],
-                [{'key': '&identifier', 'tgt': None, 'src': None}],
-                [{'key': '&value', 'tgt': None, 'src': None}]],
- 'return': [[{'key': 'RET', 'tgt': '&expression', 'src': None}],
-            [{'key': 'RET', 'tgt': '&value', 'src': None}],
-            [{'key': 'RET', 'tgt': '&identifier', 'src': None}]],
- 'op': [[{'key': 'MOV', 'tgt': None, 'src': None}],
-        [{'key': 'ADD', 'tgt': None, 'src': None}],
-        [{'key': 'SUB', 'tgt': None, 'src': None}],
-        [{'key': 'MUL', 'tgt': None, 'src': None}],
-        [{'key': 'DIV', 'tgt': None, 'src': None}]],
- 'value': [[{'key': '#value', 'tgt': None, 'src': None}],
-           [{'key': '#value', 'tgt': None, 'src': None}]],
- 'identifier': [[{'key': '*identifier', 'tgt': None, 'src': None}]]}
+{'function': [[{'opc': 'LOC', 'tgt': '&identifier', 'src': None},
+               {'opc': '&routine', 'tgt': None, 'src': None}]],
+ 'routine': [[{'opc': '&expression', 'tgt': None, 'src': None},
+              {'opc': '&routine', 'tgt': None, 'src': None}],
+             [{'opc': '&expression', 'tgt': None, 'src': None}],
+             [{'opc': '&return', 'tgt': None, 'src': None}]],
+ 'expression': [[{'opc': '&op', 'tgt': '&identifier', 'src': '&expression'}],
+                [{'opc': '&op', 'tgt': '&identifier', 'src': '&expression'}],
+                [{'opc': '&op', 'tgt': '&value', 'src': '&expression'}],
+                [{'opc': '&identifier', 'tgt': None, 'src': None}],
+                [{'opc': '&value', 'tgt': None, 'src': None}]],
+ 'return': [[{'opc': 'RET', 'tgt': '&expression', 'src': None}],
+            [{'opc': 'RET', 'tgt': '&value', 'src': None}],
+            [{'opc': 'RET', 'tgt': '&identifier', 'src': None}]],
+ 'op': [[{'opc': 'MOV', 'tgt': None, 'src': None}],
+        [{'opc': 'ADD', 'tgt': None, 'src': None}],
+        [{'opc': 'SUB', 'tgt': None, 'src': None}],
+        [{'opc': 'MUL', 'tgt': None, 'src': None}],
+        [{'opc': 'DIV', 'tgt': None, 'src': None}]],
+ 'value': [[{'opc': '#value', 'tgt': None, 'src': None}],
+           [{'opc': '#value', 'tgt': None, 'src': None}]],
+ 'identifier': [[{'opc': '*identifier', 'tgt': None, 'src': None}]]}
 ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 int main() {
-  return 0;
+  return 0 + 1;
 }
 ――― Abstract Syntax ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 {'function': {'type': 'int',
               'identifier': 'main',
-              'routine': {'return': {'expression': {'value': '0'}}}}}
-――― Internal Representation ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-[{'LOC': {'tgt': '*main'}}, {'RET': {'tgt': '#0'}}]
+              'routine': {'return': {'expression': {'value': '0',
+                                                    'op': '+',
+                                                    'expression': {'value': '1'}}}}}}
+――― Internal Representation ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+[{'LOC': {'tgt': '*main'}},
+ {'RET': {'tgt': {'ADD': {'tgt': '#0', 'src': '#1'}}}}]
 ――― Target Map ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-{'LOC': ['LOC *tgt'], 'RET': ['RET #tgt']}
+{'LOC': ['LOC *tgt'],
+ 'ADD': ['ADD #tgt, &src', 'ADD #tgt, #src'],
+ 'RET': ['RET &tgt', 'RET #tgt']}
 ――― Target Grammar ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-{'LOC': [['$tgt:', '\\tpush rbp', '\\tmov rbp, rsp']],
- 'RET': [['\\tmov eax, $tgt', '\\tpop rbp', '\\tret']]}
+{'LOC': ['$tgt:\\n\\tpush rbp\\n\\tmov rbp, rsp\\n'],
+ 'ADD': ['&src\\tpop rax\\n\\tadd rax, $tgt\\n\\tpush rax\\n',
+         '\\tmov rax, $src\\n\\tadd rax, $tgt\\n\\tpush rax\\n'],
+ 'RET': ['&tgt\\tpop rax\\n\\tpop rbp\\n\\tret\\n',
+         '\\tmov rax, $tgt\\n\\tpop rbp\\n\\tret\\n']}
 ――― Target Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 main:
   push rbp
   mov rbp, rsp
-  mov eax, 0
+  mov rax, 1
   pop rbp
   ret
 ```
