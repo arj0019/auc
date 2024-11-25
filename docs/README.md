@@ -23,7 +23,7 @@ DUC is a C-like compiler developed concurrently with the ECC framework that is u
 For example, the logged output of `./duc -v DEBUG ./tst/retexpr.c` is...
 
 ```
-――― Source Grammar ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+――― Source Grammar ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 {'function': ['\\s*(?P<type>\\w+)\\s+(?P<identifier>\\w+)\\(\\)\\s*\\{(?P<routine>.*?)\\}'],
  'routine': ['\\s*(?P<expression>[^;]*;)(?P<routine>.*;)',
              '\\s*(?P<expression>[^;]*;)',
@@ -40,7 +40,7 @@ For example, the logged output of `./duc -v DEBUG ./tst/retexpr.c` is...
  'type': ['int'],
  'value': ['-?0x[0-9A-Fa-f]+', '-?[0-9]+'],
  'identifier': ['[A-Za-z_][0-9A-Za-z_]*']}
-――― Source Map ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+――― Source Map ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 {'function': [[{'opc': 'LOC', 'tgt': '&identifier', 'src': None},
                {'opc': '&routine', 'tgt': None, 'src': None}]],
  'routine': [[{'opc': '&expression', 'tgt': None, 'src': None},
@@ -63,30 +63,30 @@ For example, the logged output of `./duc -v DEBUG ./tst/retexpr.c` is...
  'value': [[{'opc': '#value', 'tgt': None, 'src': None}],
            [{'opc': '#value', 'tgt': None, 'src': None}]],
  'identifier': [[{'opc': '*identifier', 'tgt': None, 'src': None}]]}
-――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 int main() {
   return 0 + 1;
 }
-――― Abstract Syntax ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+――― Abstract Syntax ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 {'function': {'type': 'int',
               'identifier': 'main',
               'routine': {'return': {'expression': {'value': '0',
                                                     'op': '+',
                                                     'expression': {'value': '1'}}}}}}
-――― Internal Representation ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+――― Internal Representation ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 [{'LOC': {'tgt': '*main'}},
  {'RET': {'tgt': {'ADD': {'tgt': '#0', 'src': '#1'}}}}]
-――― Target Map ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+――― Target Map ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 {'LOC': ['LOC *tgt'],
  'ADD': ['ADD #tgt, &src', 'ADD #tgt, #src'],
  'RET': ['RET &tgt', 'RET #tgt']}
-――― Target Grammar ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+――― Target Grammar ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 {'LOC': ['$tgt:\\n\\tpush rbp\\n\\tmov rbp, rsp\\n'],
  'ADD': ['&src\\tpop rax\\n\\tadd rax, $tgt\\n\\tpush rax\\n',
          '\\tmov rax, $src\\n\\tadd rax, $tgt\\n\\tpush rax\\n'],
  'RET': ['&tgt\\tpop rax\\n\\tpop rbp\\n\\tret\\n',
          '\\tmov rax, $tgt\\n\\tpop rbp\\n\\tret\\n']}
-――― Target Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+――― Target Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 main:
   push rbp
   mov rbp, rsp
