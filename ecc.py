@@ -210,6 +210,11 @@ class Generator():
     self.tfmt = OrderedDict(tfmt)
     logging.debug(PPRINT(dict(self.tfmt)))
 
+    self.tdel = [match.encode('utf-8') \
+                      .decode('unicode_escape') \
+                      .expandtabs(2)
+                 for match in re.findall(DEL, grammar)]
+
   def generate(self, ir):
     """ Generate target code from the given internal representation with
     recursive decent.
@@ -225,6 +230,7 @@ class Generator():
                .encode() \
                .decode('unicode_escape') \
                .expandtabs(2)
+    for _del in self.tdel: code = re.sub(_del, '', code, flags=re.DOTALL)
     logging.info(code)
     return code
 
