@@ -243,7 +243,7 @@ class Generator():
           for opr in ('tgt', 'src'):
             if not opr in args: continue
             if isinstance(args[opr], dict): ins[opr] = f"&{opr}"
-            else: ins[opr] = f"{args['tgt'][0]}{opr}"
+            else: ins[opr] = f"{args[opr][0]}{opr}"
 
           if ins == re.match(INS, expr).groupdict(): break
         else: raise SyntaxError(f"{_ir}")
