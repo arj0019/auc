@@ -142,11 +142,12 @@ class Parser():
         else: raise SyntaxError(f"{_ast}")
 
         for ins in self.smap[sym][var]:  # construct ir from ast
-          if (opc := ins['opc']).startswith('&'):
+          if (opc := ins['opc']).startswith('&'):  # if opc is dereferenced...
             opc = self._translate({opc[1:]: attrs[opc[1:]]})
-          elif opc.startswith('#'): opc = '#' + attrs
-          elif opc.startswith('*'): opc = '*' + attrs
+          elif opc.startswith('#'): opc = '#' + attrs  # if opc is explicit...
+          elif opc.startswith('*'): opc = '*' + attrs  # if opc is a symbol...
 
+          # initialize ir from instruction
           ins = {attr: val for attr, val in ins.items()
                  if (attr != 'opc') and (val != None)}
           if not ins: ir.append(opc); continue
@@ -266,18 +267,24 @@ class Generator():
 
         fmt = self.tfmt[opc][var]  # format mapped ir variant
         for opr in {opr:val for opr, val in args.items() if opr != 'opc'}:
-          if isinstance(args[opr], dict):  # operand is a nested ir
-            fmt = re.sub(rf'\&{opr}', self._generate(args[opr], syms, ofs), fmt)
+          if isinstance(args[opr], dict):  # if operand is a nested ir...
+            fmt = re.sub(rf"\&{opr}", self._generate(args[opr], syms, ofs), fmt)
 
-          elif args[opr][0] == '#':  # operand is an explicit value
-            fmt = re.sub(rf'\${opr}', args[opr][1:], fmt)
+          elif args[opr][0] == '#':  # if operand is an explicit value...
+            fmt = re.sub(rf"\${opr}", args[opr][1:], fmt)
 
-          elif args[opr][0] == '*':  # operand is a symbol
-              if re.search(rf'\&{opr}', fmt):
-                if args[opr][1:] not in syms:
-                  syms[args[opr][1:]] = rf"rbp-{(ofs := ofs + 2)}"
-                fmt = re.sub(rf'\&{opr}', syms[args[opr][1:]], fmt)
-              fmt = re.sub(rf'\${opr}', args[opr][1:], fmt)
+          elif args[opr][0] == '*':  # if operand is a symbol...
+            if re.search(rf"!{opr}", fmt):  # if symbol is declared...
+              if args[opr][1:] not in syms:  # if first declaration of symbol...
+                syms[args[opr][1:]] = rf"{(ofs := ofs + 2)}"
+              fmt = re.sub(rf"!{opr}", rf"&{opr}", fmt)
+
+            if re.search(rf"&{opr}", fmt):  # if symbol is dereferenced...
+              if args[opr][1:] not in syms:  # if dereference before declaration...
+                raise UnboundLocalError(f"Symbol {args[opr][1:]} referenced before declaration.")
+              fmt = re.sub(rf"\&{opr}", syms[args[opr][1:]], fmt)
+
+            fmt = re.sub(rf"\${opr}", args[opr][1:], fmt)  # format raw symbol
 
         code += fmt
     return code

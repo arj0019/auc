@@ -5,6 +5,6 @@ int main() {
 }
 
 int notmain() {
-  int d = a + 2;
+  int d = 1 + 2;
   return d + 3;
 }

@@ -10,13 +10,13 @@
            | MOV *tgt, #src
 .fmt MOV ::= &src
              \tpop rax\n
-             \tmov &tgt, rax\n
-           | \tmov &tgt, $src\n
+             \tmov rbx-!tgt, rax\n
+           | \tmov rbx-!tgt, $src\n
 
 .map ADD ::= ADD *tgt, #src
            | ADD #tgt, &src
            | ADD #tgt, #src
-.fmt ADD ::= \tmov rax, &tgt\n
+.fmt ADD ::= \tmov rax, rbx-&tgt\n
              \tadd rax, $src\n
              \tpush rax\n
            | &src
@@ -41,7 +41,7 @@
 .map RET ::= RET *tgt
            | RET &tgt
            | RET #tgt
-.fmt RET ::= \tmov rax, &tgt\n
+.fmt RET ::= \tmov rax, rbx-&tgt\n
              \tret\n
            | &tgt
              \tpop rax\n
