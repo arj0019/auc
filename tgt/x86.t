@@ -10,13 +10,13 @@
            | MOV *tgt, #src
 .fmt MOV ::= &src
              \tpop rax\n
-             \tmov rbx-!tgt, rax\n
-           | \tmov rbx-!tgt, $src\n
+             \tmov rbp-!tgt, rax\n
+           | \tmov rbp-!tgt, $src\n
 
 .map ADD ::= ADD *tgt, #src
            | ADD #tgt, &src
            | ADD #tgt, #src
-.fmt ADD ::= \tmov rax, rbx-&tgt\n
+.fmt ADD ::= \tmov rax, rbp-&tgt\n
              \tadd rax, $src\n
              \tpush rax\n
            | &src
@@ -30,9 +30,9 @@
 .map SUB ::= SUB #tgt, &src
            | SUB #tgt, #src
 .fmt SUB ::= &src
-             \tpop rbx\n
+             \tpop rbp\n
              \tmov rax, $tgt\n
-             \tsub rax, rbx\n
+             \tsub rax, rbp\n
              \tpush rax\n
            | \tmov rax, $tgt\n
              \tsub rax, $src\n
@@ -41,7 +41,7 @@
 .map RET ::= RET *tgt
            | RET &tgt
            | RET #tgt
-.fmt RET ::= \tmov rax, rbx-&tgt\n
+.fmt RET ::= \tmov rax, rbp-&tgt\n
              \tret\n
            | &tgt
              \tpop rax\n
@@ -55,3 +55,5 @@
      \tpop rax\n
 .del \tadd [^\n]*, 0\n
 .del \tsub [^\n]*, 0\n
+
+.sub (\tmov (\w+), (\w+)\n\tmov \2, \1\n);(\tmov \1, \2\n)
