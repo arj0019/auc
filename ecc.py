@@ -14,8 +14,8 @@ HEADER = lambda text: f"――― {text} {'―' * (TERMSIZE.columns - len(text) 
 PPRINT = lambda text: pprint.pformat(text, sort_dicts=False)
 
 
-DEL = r'\.del\s+(?P<exprs>.+?)(?=\.\w+\s+|$)'
-REG = r'\.reg\s+(?P<regs>.+?)(?=\.\w+\s+|$)'
+DEL = r'\.del\s+(?P<tgt>.+?)(?=\.\w+\s+|$)'
+SUB = r'\.sub\s+(?P<tgt>.+?);(?P<src>.+?)(?=\.\w+\s+|$)'
 
 FMT = r'\.fmt\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
 MAP = r'\.map\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
@@ -37,6 +37,8 @@ class Parser():
     grammar = re.sub(r'(\n|\t)', '', grammar)
 
     self.sdel = re.findall(DEL, grammar)
+
+    self.ssub = re.findall(SUB, grammar)
 
     logging.debug(HEADER('Source Grammar'))
     sfmt = [(sym, re.split(OR, exprs)) for sym, exprs in re.findall(FMT, grammar)]
@@ -86,6 +88,7 @@ class Parser():
       source (str): preprocessed source code
     """
     for _del in self.sdel: source = re.sub(_del, '', source)
+    for tgt, src in self.ssub: code = re.sub(tgt, src, source)
     return source
 
   def _parse(self, source, targets):
@@ -215,10 +218,9 @@ class Generator():
     self.tfmt = OrderedDict(tfmt)
     logging.debug(PPRINT(dict(self.tfmt)))
 
-    self.tdel = [match.encode('utf-8') \
-                      .decode('unicode_escape') \
-                      .expandtabs(2)
-                 for match in re.findall(DEL, grammar)]
+    self.tdel = re.findall(DEL, grammar)
+
+    self.tsub = re.findall(SUB, grammar)
 
   def generate(self, ir):
     """ Generate target code from the given internal representation with
@@ -231,10 +233,7 @@ class Generator():
       code (str): generated target code; formatted according to grammar
     """
     logging.info(HEADER('Target Code'))
-    code = self._generate(ir) \
-               .encode() \
-               .decode('unicode_escape') \
-               .expandtabs(2)
+    code = self._generate(ir)
     code = self._postprocess(code)
     logging.info(code)
     return code
@@ -252,8 +251,7 @@ class Generator():
     code, syms = "", {sym:loc for sym, loc in _syms.items()}
     for _ir in ir if isinstance(ir, list) else [ir]:
       if isinstance(_ir, list):  # recursive generation of ir as list
-        code += self._generate(_ir, syms, ofs)
-        continue
+        code += self._generate(_ir, syms, ofs); continue
 
       for opc, args in _ir.items():
         ins = {'opc':opc, 'tgt':None, 'src':None}
@@ -287,7 +285,8 @@ class Generator():
 
             fmt = re.sub(rf"\${opr}", args[opr][1:], fmt)  # format raw symbol
 
-        code += fmt
+        code += fmt.encode('utf-8') \
+                   .decode('unicode_escape')
     return code
 
   def _postprocess(self, code):
@@ -303,6 +302,7 @@ class Generator():
       code (str): postprocessed target code
     """
     for _del in self.tdel: code = re.sub(_del, '', code)
+    for tgt, src in self.tsub: code = re.sub(tgt, src, code)
     return code
 
 

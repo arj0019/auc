@@ -56,4 +56,4 @@
 .del \tadd [^\n]*, 0\n
 .del \tsub [^\n]*, 0\n
 
-.sub (\tmov (\w+), (\w+)\n\tmov \2, \1\n);(\tmov \1, \2\n)
+.sub \tmov ([^\n]*), ([^\n]*)\n\tmov \2, \1\n;\tmov \1, \2\n
