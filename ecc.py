@@ -15,8 +15,11 @@ PPRINT = lambda text: pprint.pformat(text, sort_dicts=False)
 
 
 DEL = r'\.del\s+(?P<exprs>.+?)(?=\.\w+\s+|$)'
+REG = r'\.reg\s+(?P<regs>.+?)(?=\.\w+\s+|$)'
+
 FMT = r'\.fmt\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
 MAP = r'\.map\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
+
 INS = r'(?P<opc>[&*#]?\w+)(?:\s+(?P<tgt>[&*#]\w+))?\s*(?:,\s*(?P<src>[&*#]\w+))?'
 
 OR = r'\s*\|\s*'
@@ -60,7 +63,7 @@ class Parser():
       ir (list, dict): internal representation of the given source code
     """
     logging.info(HEADER('Source Code'))
-    logging.info(source.rstrip('\n'))
+    logging.info(source)
 
     logging.info(HEADER('Abstract Syntax'))
     _source = self._preprocess(source)
@@ -117,7 +120,7 @@ class Parser():
         else: continue
         source = source[match.end():]; break
 
-      else: raise SyntaxError(f"@ln:col ({source})")
+      else: raise SyntaxError(f"{source}")
     return ast
 
   def _translate(self, ast):
@@ -131,14 +134,14 @@ class Parser():
     """
     ir = []
     for _ast in ast if isinstance(ast, list) else [ast]:
-      for sym, attrs in _ast.items():
+      for sym, attrs in _ast.items():  # identify ast variant
         for var, expr in enumerate(self.sfmt[sym]):
           groups = re.compile(expr).groupindex.keys()
           if isinstance(attrs, dict) and set(attrs.keys()) == set(groups): break
           elif not isinstance(attrs, dict) and re.match(expr, attrs): break
         else: raise SyntaxError(f"{_ast}")
 
-        for ins in self.smap[sym][var]:
+        for ins in self.smap[sym][var]:  # construct ir from ast
           if (opc := ins['opc']).startswith('&'):
             opc = self._translate({opc[1:]: attrs[opc[1:]]})
           elif opc.startswith('#'): opc = '#' + attrs
@@ -148,6 +151,7 @@ class Parser():
                  if (attr != 'opc') and (val != None)}
           if not ins: ir.append(opc); continue
 
+          # recursively translate slices of the ast
           ir.append({opc: {attr: (self._translate({val[1:]: attrs[val[1:]]})
                                   if val.startswith('&') else val)
                      for attr, val in ins.items()}})
@@ -173,7 +177,7 @@ class Parser():
 
     elif isinstance(struct, dict):
       _struct = {}
-      for key, value in struct.items():  # Recursively reduce dictionaries by key
+      for key, value in struct.items():  # recursively reduce dictionaries by key
         _value = Parser._reduce(value)
         if (isinstance(_value, dict) and len(_value) == 1 and key in _value):
           _struct[key] = _value[key]
@@ -188,7 +192,6 @@ class Optimizer():
     """ Initialize an internal representation optimizer. """
 
   def optimize(self, ir): return ir
-
 
 class Generator():
   def __init__(self, grammar, **kwargs):
@@ -234,25 +237,48 @@ class Generator():
     logging.info(code)
     return code
 
-  def _generate(self, ir):
-    code = ""
+  def _generate(self, ir, _syms={}, ofs=0):
+    """ Generate target code from the given internal representation with
+    recursive decent.
+
+    Args:
+      ir (list, dict): partial internal representation of the given source code
+
+    Returns:
+      code (str): generated target code; formatted according to grammar
+    """
+    code, syms = "", {sym:loc for sym, loc in _syms.items()}
     for _ir in ir if isinstance(ir, list) else [ir]:
+      if isinstance(_ir, list):  # recursive generation of ir as list
+        code += self._generate(_ir, syms, ofs)
+        continue
+
       for opc, args in _ir.items():
-        for var, expr in enumerate(self.tmap[opc]):
-          ins = {'opc':opc, 'tgt':None, 'src':None}
-          for opr in ('tgt', 'src'):
-            if not opr in args: continue
-            if isinstance(args[opr], dict): ins[opr] = f"&{opr}"
-            else: ins[opr] = f"{args[opr][0]}{opr}"
+        ins = {'opc':opc, 'tgt':None, 'src':None}
+        for opr in ('tgt', 'src'):  # construct instruction from ir
+          if not opr in args: continue
+          if isinstance(args[opr], dict): ins[opr] = f"&{opr}"
+          else: ins[opr] = f"{args[opr][0]}{opr}"
 
+        for var, expr in enumerate(self.tmap[opc]):  # identify ir variant
           if ins == re.match(INS, expr).groupdict(): break
-        else: raise SyntaxError(f"{_ir}")
+        else: raise SyntaxError(f"Could not map {_ir} to a variant of {opc}.")
 
-        fmt = self.tfmt[opc][var]
-        for opr in {k:v for k, v in args.items() if k != 'opc'}:
-          if isinstance(args[opr], dict):
-            fmt = re.sub(rf'\&{opr}', self._generate(args[opr]), fmt)
-          else: fmt = re.sub(rf'\${opr}', args[opr][1:], fmt)
+        fmt = self.tfmt[opc][var]  # format mapped ir variant
+        for opr in {opr:val for opr, val in args.items() if opr != 'opc'}:
+          if isinstance(args[opr], dict):  # operand is a nested ir
+            fmt = re.sub(rf'\&{opr}', self._generate(args[opr], syms, ofs), fmt)
+
+          elif args[opr][0] == '#':  # operand is an explicit value
+            fmt = re.sub(rf'\${opr}', args[opr][1:], fmt)
+
+          elif args[opr][0] == '*':  # operand is a symbol
+              if re.search(rf'\&{opr}', fmt):
+                if args[opr][1:] not in syms:
+                  syms[args[opr][1:]] = rf"rbp-{(ofs := ofs + 2)}"
+                fmt = re.sub(rf'\&{opr}', syms[args[opr][1:]], fmt)
+              fmt = re.sub(rf'\${opr}', args[opr][1:], fmt)
+
         code += fmt
     return code
 

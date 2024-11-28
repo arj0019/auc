@@ -1,8 +1,10 @@
 int main() {
-  int a = 1 + 2;
-  return 3 + a;
+  int a = 1;
+  int b = a + 2;
+  return b + 3;
 }
 
 int notmain() {
-  int b = 4;
+  int d = a + 2;
+  return d + 3;
 }
