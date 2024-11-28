@@ -36,9 +36,13 @@ class Parser():
     grammar = re.sub(r'\s{2,}', '\t', grammar)
     grammar = re.sub(r'(\n|\t)', '', grammar)
 
+    logging.debug(HEADER('Source Deletions'))
     self.sdel = re.findall(DEL, grammar)
+    logging.debug(PPRINT(self.sdel))
 
+    logging.debug(HEADER('Source Substitutions'))
     self.ssub = re.findall(SUB, grammar)
+    logging.debug(PPRINT(self.ssub))
 
     logging.debug(HEADER('Source Grammar'))
     sfmt = [(sym, re.split(OR, exprs)) for sym, exprs in re.findall(FMT, grammar)]
@@ -66,8 +70,11 @@ class Parser():
     logging.info(HEADER('Source Code'))
     logging.info(source)
 
-    logging.info(HEADER('Abstract Syntax'))
+    logging.debug(HEADER('Source Code (Pre-Processed)'))
     _source = self._preprocess(source)
+    logging.debug(_source)
+
+    logging.info(HEADER('Abstract Syntax'))
     ast = Parser._reduce(self._parse(_source, self.sfmt.items()))
     logging.info(PPRINT(ast))
 
@@ -88,7 +95,7 @@ class Parser():
       source (str): preprocessed source code
     """
     for _del in self.sdel: source = re.sub(_del, '', source)
-    for tgt, src in self.ssub: code = re.sub(tgt, src, source)
+    for tgt, src in self.ssub: source = re.sub(tgt, src, source)
     return source
 
   def _parse(self, source, targets):
@@ -218,9 +225,13 @@ class Generator():
     self.tfmt = OrderedDict(tfmt)
     logging.debug(PPRINT(dict(self.tfmt)))
 
+    logging.debug(HEADER('Target Deletions'))
     self.tdel = re.findall(DEL, grammar)
+    logging.debug(PPRINT(self.tdel))
 
+    logging.debug(HEADER('Target Substitutions'))
     self.tsub = re.findall(SUB, grammar)
+    logging.debug(PPRINT(self.tsub))
 
   def generate(self, ir):
     """ Generate target code from the given internal representation with
@@ -232,9 +243,12 @@ class Generator():
     Returns:
       code (str): generated target code; formatted according to grammar
     """
-    logging.info(HEADER('Target Code'))
-    code = self._generate(ir)
-    code = self._postprocess(code)
+    logging.debug(HEADER('Target Code'))
+    _code = self._generate(ir)
+    logging.debug(_code)
+
+    logging.info(HEADER('Target Code (Post-Processed)'))
+    code = self._postprocess(_code)
     logging.info(code)
     return code
 
