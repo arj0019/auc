@@ -36,8 +36,7 @@ class Parser():
     grammar = re.sub(r'\s{2,}', '\t', grammar)
     grammar = re.sub(r'(\n|\t)', '', grammar)
 
-    _del = re.search(DEL, grammar, re.MULTILINE)
-    self._del = _del.group('exprs') if _del else ''
+    self.sdel = re.findall(DEL, grammar)
 
     logging.debug(HEADER('Source Grammar'))
     sfmt = [(sym, re.split(OR, exprs)) for sym, exprs in re.findall(FMT, grammar)]
@@ -77,7 +76,7 @@ class Parser():
     return ir
 
   def _preprocess(self, source):
-    """Modify given source code according to grammar configuration
+    """ Modify given source code according to grammar configuration
 
     Args:
       self._del (str): characters to exclude
@@ -86,7 +85,8 @@ class Parser():
     Returns:
       source (str): preprocessed source code
     """
-    return re.sub(self._del, '', source)  # remove grammar exclusions
+    for _del in self.sdel: source = re.sub(_del, '', source)
+    return source
 
   def _parse(self, source, targets):
     """ Parse the given source code into an AST with recursive decent.
@@ -194,6 +194,7 @@ class Optimizer():
 
   def optimize(self, ir): return ir
 
+
 class Generator():
   def __init__(self, grammar, **kwargs):
     """ Initialize a code generator from a given target language grammar.
@@ -234,7 +235,7 @@ class Generator():
                .encode() \
                .decode('unicode_escape') \
                .expandtabs(2)
-    for _del in self.tdel: code = re.sub(_del, '', code)
+    code = self._postprocess(code)
     logging.info(code)
     return code
 
@@ -287,6 +288,21 @@ class Generator():
             fmt = re.sub(rf"\${opr}", args[opr][1:], fmt)  # format raw symbol
 
         code += fmt
+    return code
+
+  def _postprocess(self, code):
+    """ Modify given target code according to grammar configuration
+
+    Args:
+      self.tdel (str): expressions to remove
+      self.tsub (str): expressions to substitute
+
+      code (str): target code to preprocess
+
+    Returns:
+      code (str): postprocessed target code
+    """
+    for _del in self.tdel: code = re.sub(_del, '', code)
     return code
 
 
