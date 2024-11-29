@@ -9,42 +9,58 @@
 .map MOV ::= MOV *tgt, &src
            | MOV *tgt, #src
 .fmt MOV ::= &src
-             \tpop rax\n
              \tmov rbp-!tgt, rax\n
            | \tmov rbp-!tgt, $src\n
 
-.map ADD ::= ADD *tgt, #src
+.map ADD ::= ADD *tgt, *src
+           | ADD *tgt, &src
+           | ADD *tgt, #src
+           | ADD #tgt, *src
            | ADD #tgt, &src
            | ADD #tgt, #src
 .fmt ADD ::= \tmov rax, rbp-&tgt\n
-             \tadd rax, $src\n
-             \tpush rax\n
+             \tadd rax, rbp-&src\n
            | &src
-             \tpop rax\n
+             \tadd rax, rbp-&tgt\n
+           | \tmov rax, rbp-&tgt\n
+             \tadd rax, $src\n
+           | \tmov rax, rbp-&src\n
              \tadd rax, $tgt\n
-             \tpush rax\n
+           | &src
+             \tadd rax, $tgt\n
            | \tmov rax, $src\n
              \tadd rax, $tgt\n
-             \tpush rax\n
 
-.map SUB ::= SUB #tgt, &src
+.map SUB ::= SUB *tgt, *src
+           | SUB *tgt, &src
+           | SUB *tgt, #src
+           | SUB #tgt, *src
+           | SUB #tgt, &src
            | SUB #tgt, #src
-.fmt SUB ::= &src
-             \tpop rbp\n
+.fmt SUB ::= \tmov rax, rbp-&tgt\n
+             \tsub rax, rbp-&tgt\n
+           | &src
+             \tmov rbx, rax\n
+             \tmov rax, rbp-&tgt\n
+             \tsub rax, rbx\n
+           | \tmov rax, rbp-&tgt\n
+             \tsub rax, $src\n
+           | \tmov rax, $tgt\n
+             \tsub rax, &src\n
+           | &src
+             \tmov rbx, rax\n
              \tmov rax, $tgt\n
-             \tsub rax, rbp\n
-             \tpush rax\n
+             \tsub rax, rbx\n
            | \tmov rax, $tgt\n
              \tsub rax, $src\n
-             \tpush rax\n
 
 .map RET ::= RET *tgt
            | RET &tgt
            | RET #tgt
 .fmt RET ::= \tmov rax, rbp-&tgt\n
+             \tpop rbp\n
              \tret\n
            | &tgt
-             \tpop rax\n
              \tpop rbp\n
              \tret\n
            | \tmov rax, $tgt\n
