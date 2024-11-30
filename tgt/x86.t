@@ -24,8 +24,8 @@
              \tadd rax, rbp-&tgt\n
            | \tmov rax, rbp-&tgt\n
              \tadd rax, $src\n
-           | \tmov rax, rbp-&src\n
-             \tadd rax, $tgt\n
+           | \tmov rax, $tgt\n
+             \tadd rax, rbp-&src\n
            | &src
              \tadd rax, $tgt\n
            | \tmov rax, $src\n
@@ -38,7 +38,7 @@
            | SUB #tgt, &src
            | SUB #tgt, #src
 .fmt SUB ::= \tmov rax, rbp-&tgt\n
-             \tsub rax, rbp-&tgt\n
+             \tsub rax, rbp-&src\n
            | &src
              \tmov rbx, rax\n
              \tmov rax, rbp-&tgt\n
@@ -46,7 +46,7 @@
            | \tmov rax, rbp-&tgt\n
              \tsub rax, $src\n
            | \tmov rax, $tgt\n
-             \tsub rax, &src\n
+             \tsub rax, rbp-&src\n
            | &src
              \tmov rbx, rax\n
              \tmov rax, $tgt\n

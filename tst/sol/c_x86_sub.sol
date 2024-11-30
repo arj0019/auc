@@ -142,7 +142,7 @@ sub_symbol_symbol:
 	mov rbp-2, 0
 	mov rbp-4, 1
 	mov rax, rbp-2
-	sub rax, rbp-2
+	sub rax, rbp-4
 	mov rbp-6, rax
 	pop rbp
 	ret
@@ -172,7 +172,7 @@ sub_constant_symbol:
 	mov rbp, rsp
 	mov rbp-2, 0
 	mov rax, 1
-	sub rax, 2
+	sub rax, rbp-2
 	mov rbp-4, rax
 	pop rbp
 	ret

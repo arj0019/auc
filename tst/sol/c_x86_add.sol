@@ -169,8 +169,8 @@ add_constant_symbol:
 	push rbp
 	mov rbp, rsp
 	mov rbp-2, 0
-	mov rax, rbp-2
-	add rax, 1
+	mov rax, 1
+	add rax, rbp-2
 	mov rbp-4, rax
 	pop rbp
 	ret
