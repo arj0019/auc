@@ -6,9 +6,11 @@
              \tpush rbp\n
              \tmov rbp, rsp\n
 
-.map MOV ::= MOV *tgt, &src
+.map MOV ::= MOV *tgt, *src
+           | MOV *tgt, &src
            | MOV *tgt, #src
-.fmt MOV ::= &src
+.fmt MOV ::= \tmov rbp-!tgt, rbp-&src\n
+           | &src
              \tmov rbp-!tgt, rax\n
            | \tmov rbp-!tgt, $src\n
 
