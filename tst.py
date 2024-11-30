@@ -31,7 +31,10 @@ def create_test(src, tgt, tst):
                                capture_output=True,
                                text=True)
 
-    path = os.path.join(TST + 'sol/', tst.split('.')[0] + '.sol')
+    src_name = src.split('.')[0]
+    tgt_name = tgt.split('.')[0]
+    tst_name = tst.split('.')[0]
+    path = os.path.join(TST + 'sol/', f"{src_name}_{tgt_name}_{tst_name}.sol")
     if VALIDATE:  # save test output as verified solution
       with open(path, 'w') as file: file.write(process.stderr)
     else:  # assert test output matches verified solution
