@@ -252,7 +252,7 @@ class Generator():
     logging.info(code)
     return code
 
-  def _generate(self, ir, _syms={}, ofs=0):
+  def _generate(self, ir, _syms={}, ofs=-2):
     """ Generate target code from the given internal representation with
     recursive decent.
 
