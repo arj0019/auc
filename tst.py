@@ -1,7 +1,6 @@
-import json
 import os
-
-from ecc import Parser
+import subprocess
+import logging
 
 
 SRC = './src/'  # Directory where grammar files are located (<lang>.s)
@@ -10,27 +9,34 @@ TST = './tst/'  # Directory where source files are located (<src>.<lang>)
 
 VALIDATE = os.environ.get('VALIDATE', False)
 
+LOGGER = logging.getLogger(__name__)
 
-def create_test(sgrammar, stest):
+
+def create_test(src, tgt, tst):
   """ Create a parser test for a given grammar and source.
 
   Args:
-    sgrammar (str): name, with extension, of the grammar file
-    stest (str): name, with extension, of the source file
+    src (str): name, with extension, of the source grammar file
+    tgt (str): name, with extension, of the target grammar file
+    tst (str): name, with extension, of the source code file
   """
-  def _test(self):
-    with open(os.path.join(SRC, sgrammar), 'r') as file: grammar = file.read()
-    parser = Parser(grammar)
+  def _test(self, caplog):
+    with caplog.at_level(logging.DEBUG):
+      args = [os.path.join(SRC, src),
+              os.path.join(TGT, tgt),
+              os.path.join(TST, tst),
+              "-vINFO"]
 
-    with open(os.path.join(TST, stest), 'r') as file: source = file.read()
-    ast = parser.parse(source)
+      process = subprocess.run(["python3", "./ecc.py"] + args,
+                               capture_output=True,
+                               text=True)
 
-    _path = os.path.join(TST + 'sol/', stest + '.sol')
+    path = os.path.join(TST + 'sol/', tst.split('.')[0] + '.sol')
     if VALIDATE:  # save test output as verified solution
-      with open(_path, 'w') as file: json.dump(ast, file, indent=2)
+      with open(path, 'w') as file: file.write(process.stderr)
     else:  # assert test output matches verified solution
-      with open(_path, 'r') as file: _ast = json.load(file)
-      assert ast == _ast
+      with open(path, 'r') as file: log = file.read()
+      assert process.stderr == log
 
   return _test
 
@@ -40,19 +46,20 @@ def create_test_groups():
   For each grammar <lang>.s in $SRC, create a set of test groups consisting of
   all sources <src>.<lang> in $TST.
   """
-  for sgrammar in [s for s in os.listdir(SRC) if s.endswith('.s')]:
-    lang = sgrammar.split('.')[0]  # extract language identifier
+  for sgrammar in [src for src in os.listdir(SRC) if src.endswith('.s')]:
+    for tgrammar in [tgt for tgt in os.listdir(TGT) if tgt.endswith('.t')]:
+      sid = sgrammar.split('.')[0]  # extract source grammar identifier
+      tid = tgrammar.split('.')[0]  # extract target grammar identifier
 
-    # create a test group for each grammar
-    class_name = f"Test_{lang.capitalize()}"
-    cls = type(class_name, (object,), {})
-    
-    # create a test method for each test file
-    for stest in [s for s in os.listdir(TST) if s.endswith(f".{lang}")]:
-      test_name = f"test_{stest.replace('.', '_')}"
-      test = create_test(sgrammar, stest)
-      setattr(cls, test_name, test)
+      # create a test group for each combination of grammars
+      class_name = f"Test_{sid.capitalize()}_{tid.capitalize()}"
+      cls = type(class_name, (object,), {})
 
-    globals()[class_name] = cls  # register the test group for global access
+      # create a test method for each test file
+      for tst in [tst for tst in os.listdir(TST) if tst.endswith(f".{sid}")]:
+        name = f"test_{sid}_{tid}_{tst.split('.')[0]}"
+        setattr(cls, name, create_test(sgrammar, tgrammar, tst))
+
+      globals()[class_name] = cls  # register the test group for global access
 
 create_test_groups()
