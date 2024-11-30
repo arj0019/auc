@@ -1,6 +1,5 @@
 import os
 import subprocess
-import logging
 
 
 SRC = './src/'  # Directory where grammar files are located (<lang>.s)
@@ -8,8 +7,6 @@ TGT = './tgt/'  # Directory where grammar files are located (<lang>.t)
 TST = './tst/'  # Directory where source files are located (<src>.<lang>)
 
 VALIDATE = os.environ.get('VALIDATE', False)
-
-LOGGER = logging.getLogger(__name__)
 
 
 def create_test(src, tgt, tst):
@@ -21,15 +18,14 @@ def create_test(src, tgt, tst):
     tst (str): name, with extension, of the source code file
   """
   def _test(self, caplog):
-    with caplog.at_level(logging.DEBUG):
-      args = [os.path.join(SRC, src),
-              os.path.join(TGT, tgt),
-              os.path.join(TST, tst),
-              "-vINFO"]
+    args = [os.path.join(SRC, src),
+            os.path.join(TGT, tgt),
+            os.path.join(TST, tst),
+            "-vINFO"]
 
-      process = subprocess.run(["python3", "./ecc.py"] + args,
-                               capture_output=True,
-                               text=True)
+    process = subprocess.run(["python3", "./ecc.py"] + args,
+                             capture_output=True,
+                             text=True)
 
     src_name = src.split('.')[0]
     tgt_name = tgt.split('.')[0]
