@@ -54,6 +54,48 @@
            | \tmov rax, $tgt\n
              \tsub rax, $src\n
 
+.map MUL ::= MUL *tgt, *src
+           | MUL *tgt, &src
+           | MUL *tgt, #src
+           | MUL #tgt, *src
+           | MUL #tgt, &src
+           | MUL #tgt, #src
+.fmt MUL ::= \tmov rax, rbp-&src\n
+             \tmul rax, rbp-&tgt\n
+           | &src
+             \tmul rax. rbp-&tgt\n
+           | \tmov rax, $src\n
+             \tmul rax, rbp-&tgt\n
+           | \tmov rax, $tgt\n
+             \tmul rax, rbp-&src\n
+           | &src
+             \tmul rax, $tgt\n
+           | \tmov rax, $tgt\n
+             \tmul rax, $src\n
+
+.map DIV ::= DIV *tgt, *src
+           | DIV *tgt, &src
+           | DIV *tgt, #src
+           | DIV #tgt, *src
+           | DIV #tgt, &src
+           | DIV #tgt, #src
+.fmt DIV ::= \tmov rax, rbp-&tgt\n
+             \tdiv rax, rbp-&src\n
+           | &src
+             \tmov rbx, rax\n
+             \tmov rax, rbp-&tgt\n
+             \tdiv rax, rbx\n
+           | \tmov rax, rbp-&tgt\n
+             \tdiv rax, $src\n
+           | \tmov rax, $tgt\n
+             \tdiv rax, rbp-&src\n
+           | &src
+             \tmov rbx, rax\n
+             \tmov rax, $tgt\n
+             \tdiv rax, rbx\n
+           | \tmov rax, $tgt\n
+             \tdiv rax, $src\n
+
 .map RET ::= RET *tgt
            | RET &tgt
            | RET #tgt
