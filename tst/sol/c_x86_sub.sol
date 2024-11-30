@@ -139,41 +139,41 @@ int sub_constant_constant() {
 sub_symbol_symbol:
 	push rbp
 	mov rbp, rsp
-	mov rbp-2, 0
-	mov rbp-4, 1
-	mov rax, rbp-2
-	sub rax, rbp-4
-	mov rbp-6, rax
+	mov rbp-0, 0
+	mov rbp-2, 1
+	mov rax, rbp-0
+	sub rax, rbp-2
+	mov rbp-4, rax
 	pop rbp
 	ret
 sub_symbol_expression:
 	push rbp
 	mov rbp, rsp
-	mov rbp-2, 0
+	mov rbp-0, 0
 	mov rax, 1
 	sub rax, 2
 	mov rbx, rax
-	mov rax, rbp-2
+	mov rax, rbp-0
 	sub rax, rbx
-	mov rbp-4, rax
+	mov rbp-2, rax
 	pop rbp
 	ret
 sub_symbol_constant:
 	push rbp
 	mov rbp, rsp
-	mov rbp-2, 0
-	mov rax, rbp-2
+	mov rbp-0, 0
+	mov rax, rbp-0
 	sub rax, 1
-	mov rbp-4, rax
+	mov rbp-2, rax
 	pop rbp
 	ret
 sub_constant_symbol:
 	push rbp
 	mov rbp, rsp
-	mov rbp-2, 0
+	mov rbp-0, 0
 	mov rax, 1
-	sub rax, rbp-2
-	mov rbp-4, rax
+	sub rax, rbp-0
+	mov rbp-2, rax
 	pop rbp
 	ret
 sub_constant_expression:
@@ -184,7 +184,7 @@ sub_constant_expression:
 	mov rbx, rax
 	mov rax, 0
 	sub rax, rbx
-	mov rbp-2, rax
+	mov rbp-0, rax
 	pop rbp
 	ret
 sub_constant_constant:

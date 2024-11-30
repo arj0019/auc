@@ -49,10 +49,10 @@ int notmain() {
 main:
 	push rbp
 	mov rbp, rsp
-	mov rbp-2, 1
-	mov rax, rbp-2
+	mov rbp-0, 1
+	mov rax, rbp-0
 	add rax, 2
-	mov rbp-4, rax
+	mov rbp-2, rax
 	add rax, 3
 	pop rbp
 	ret
@@ -61,7 +61,7 @@ notmain:
 	mov rbp, rsp
 	mov rax, 2
 	add rax, 1
-	mov rbp-2, rax
+	mov rbp-0, rax
 	add rax, 3
 	pop rbp
 	ret

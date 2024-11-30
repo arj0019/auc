@@ -139,39 +139,39 @@ int mul_constant_constant() {
 mul_symbol_symbol:
 	push rbp
 	mov rbp, rsp
-	mov rbp-2, 0
-	mov rbp-4, 1
-	mov rax, rbp-4
-	mul rax, rbp-2
-	mov rbp-6, rax
+	mov rbp-0, 0
+	mov rbp-2, 1
+	mov rax, rbp-2
+	mul rax, rbp-0
+	mov rbp-4, rax
 	pop rbp
 	ret
 mul_symbol_expression:
 	push rbp
 	mov rbp, rsp
-	mov rbp-2, 0
+	mov rbp-0, 0
 	mov rax, 1
 	mul rax, 2
-	mul rax. rbp-2
-	mov rbp-4, rax
+	mul rax. rbp-0
+	mov rbp-2, rax
 	pop rbp
 	ret
 mul_symbol_constant:
 	push rbp
 	mov rbp, rsp
-	mov rbp-2, 0
+	mov rbp-0, 0
 	mov rax, 1
-	mul rax, rbp-2
-	mov rbp-4, rax
+	mul rax, rbp-0
+	mov rbp-2, rax
 	pop rbp
 	ret
 mul_constant_symbol:
 	push rbp
 	mov rbp, rsp
-	mov rbp-2, 0
+	mov rbp-0, 0
 	mov rax, 1
-	mul rax, rbp-2
-	mov rbp-4, rax
+	mul rax, rbp-0
+	mov rbp-2, rax
 	pop rbp
 	ret
 mul_constant_expression:
@@ -180,7 +180,7 @@ mul_constant_expression:
 	mov rax, 1
 	mul rax, 2
 	mul rax, 0
-	mov rbp-2, rax
+	mov rbp-0, rax
 	pop rbp
 	ret
 mul_constant_constant:
