@@ -1,7 +1,8 @@
 ――― Source Code ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 int mov_symbol_symbol() {
   int a = 0;
-  return a;
+  int b = a;
+  return b;
 }
 
 int mov_symbol_expression() {
@@ -11,8 +12,7 @@ int mov_symbol_expression() {
 
 int mov_symbol_constant() {
   int a = 0;
-  int b = a;
-  return b;
+  return a;
 }
 
 ――― Abstract Syntax ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
@@ -22,7 +22,11 @@ int mov_symbol_constant() {
                                           'identifier': 'a',
                                           'op': '=',
                                           'expression': {'value': '0'}},
-                           'routine': {'return': {'expression': {'identifier': 'a'}}}}}},
+                           'routine': {'expression': {'type': 'int',
+                                                      'identifier': 'b',
+                                                      'op': '=',
+                                                      'expression': {'identifier': 'a'}},
+                                       'routine': {'return': {'expression': {'identifier': 'b'}}}}}}},
  {'function': {'type': 'int',
                'identifier': 'mov_symbol_expression',
                'routine': {'expression': {'type': 'int',
@@ -38,26 +42,23 @@ int mov_symbol_constant() {
                                           'identifier': 'a',
                                           'op': '=',
                                           'expression': {'value': '0'}},
-                           'routine': {'expression': {'type': 'int',
-                                                      'identifier': 'b',
-                                                      'op': '=',
-                                                      'expression': {'identifier': 'a'}},
-                                       'routine': {'return': {'expression': {'identifier': 'b'}}}}}}}]
+                           'routine': {'return': {'expression': {'identifier': 'a'}}}}}}]
 ――― Internal Representation ――――――――――――――――――――――――――――――――――――――――――――――――――――
 [{'LOC': {'tgt': '*mov_symbol_symbol'}},
- [{'MOV': {'tgt': '*a', 'src': '#0'}}, {'RET': {'tgt': '*a'}}],
+ [{'MOV': {'tgt': '*a', 'src': '#0'}},
+  [{'MOV': {'tgt': '*b', 'src': '*a'}}, {'RET': {'tgt': '*b'}}]],
  {'LOC': {'tgt': '*mov_symbol_expression'}},
  [{'MOV': {'tgt': '*a', 'src': {'ADD': {'tgt': '#0', 'src': '#1'}}}},
   {'RET': {'tgt': '*a'}}],
  {'LOC': {'tgt': '*mov_symbol_constant'}},
- [{'MOV': {'tgt': '*a', 'src': '#0'}},
-  [{'MOV': {'tgt': '*b', 'src': '*a'}}, {'RET': {'tgt': '*b'}}]]]
+ [{'MOV': {'tgt': '*a', 'src': '#0'}}, {'RET': {'tgt': '*a'}}]]
 ――― Target Code (Post-Processed) ―――――――――――――――――――――――――――――――――――――――――――――――
 mov_symbol_symbol:
 	push rbp
 	mov rbp, rsp
 	mov rbp-0, 0
-	mov rax, rbp-0
+	mov rbp-2, rbp-0
+	mov rax, rbp-2
 	pop rbp
 	ret
 mov_symbol_expression:
@@ -71,8 +72,7 @@ mov_symbol_constant:
 	push rbp
 	mov rbp, rsp
 	mov rbp-0, 0
-	mov rbp-2, rbp-0
-	mov rax, rbp-2
+	mov rax, rbp-0
 	pop rbp
 	ret
 

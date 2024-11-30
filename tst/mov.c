@@ -1,6 +1,7 @@
 int mov_symbol_symbol() {
   int a = 0;
-  return a;
+  int b = a;
+  return b;
 }
 
 int mov_symbol_expression() {
@@ -10,6 +11,5 @@ int mov_symbol_expression() {
 
 int mov_symbol_constant() {
   int a = 0;
-  int b = a;
-  return b;
+  return a;
 }
