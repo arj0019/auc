@@ -1,6 +1,7 @@
 import argparse
 from collections import OrderedDict
 import logging
+import os
 import pprint
 import re
 import shutil
@@ -325,9 +326,11 @@ if __name__ == '__main__':
   parser.add_argument('source', help='source grammar file path')
   parser.add_argument('target', help='target grammar file path')
   parser.add_argument('code', help='source code file path')
+  parser.add_argument('-o', '--output', nargs='?', const='',
+                        help="Output file path (default: 'temp.txt' if -o is passed without a value).")
   parser.add_argument('-v', '--verbose', default='WARNING',
                       choices=['DEBUG', 'INFO', 'WARNING'],
-                      help="Set the logging level (default: WARNING).")
+                      help='Set the logging level (default: WARNING).')
   args = parser.parse_args()
 
   logging.basicConfig(level=args.verbose, format=f'%(message)s')
@@ -345,3 +348,11 @@ if __name__ == '__main__':
   generator = Generator(tgrammar)
 
   code = generator.generate(ir)
+
+  if args.output is not None:
+    if args.output == '':
+        filepath = os.path.dirname(args.code)
+        filename = os.path.splitext(os.path.basename(args.code))[0]
+        extension = os.path.splitext(os.path.basename(args.target))[0]
+        args.output = os.path.join(filepath, f"{filename}.{extension}")
+    with open(args.output, 'w') as file: file.write(code)
