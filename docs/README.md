@@ -124,10 +124,10 @@ For example, the target formatting and mapping of `return` could be defined as..
 DUC is a C-like compiler developed concurrently with the ECC framework that is used to explore and implement compiler construction concepts. The executable is effectively an alias for `ecc.py` with the source and target grammars pre-selected.
 <br/><br/>
 
-For example, the logged output of `./duc -v DEBUG ./tst/fun.c` is...
+For example, the logged output of `./duc -v INFO ./tst/fun.c` is...
 
 ```
-――― Source Code ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 int main() {
   int a = 1;
   int b = a + 2;
@@ -139,42 +139,42 @@ int notmain() {
   return d + 3;
 }
 
-――― Abstract Syntax ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-[{'function': {'type': 'int',
-               'identifier': 'main',
-               'routine': {'expression': {'type': 'int',
-                                          'identifier': 'a',
-                                          'op': '=',
-                                          'expression': {'value': '1'}},
-                           'routine': {'expression': {'type': 'int',
-                                                      'identifier': 'b',
-                                                      'op': '=',
-                                                      'expression': {'identifier': 'a',
-                                                                     'op': '+',
-                                                                     'expression': {'value': '2'}}},
-                                       'routine': {'return': {'expression': {'identifier': 'b',
-                                                                             'op': '+',
-                                                                             'expression': {'value': '3'}}}}}}}},
- {'function': {'type': 'int',
-               'identifier': 'notmain',
-               'routine': {'expression': {'type': 'int',
-                                          'identifier': 'd',
-                                          'op': '=',
-                                          'expression': {'value': '1',
-                                                         'op': '+',
-                                                         'expression': {'value': '2'}}},
-                           'routine': {'return': {'expression': {'identifier': 'd',
-                                                                 'op': '+',
-                                                                 'expression': {'value': '3'}}}}}}}]
-――― Internal Representation ――――――――――――――――――――――――――――――――――――――――――――――――――――
-[{'LOC': {'tgt': '*main'}},
- [{'MOV': {'tgt': '*a', 'src': '#1'}},
-  [{'MOV': {'tgt': '*b', 'src': {'ADD': {'tgt': '*a', 'src': '#2'}}}},
-   {'RET': {'tgt': {'ADD': {'tgt': '*b', 'src': '#3'}}}}]],
- {'LOC': {'tgt': '*notmain'}},
- [{'MOV': {'tgt': '*d', 'src': {'ADD': {'tgt': '#1', 'src': '#2'}}}},
-  {'RET': {'tgt': {'ADD': {'tgt': '*d', 'src': '#3'}}}}]]
-――― Target Code (Post-Processed) ―――――――――――――――――――――――――――――――――――――――――――――――
+――― Abstract Syntax ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+{'program': {'functions': {'function': {'type': 'int',
+                                        'identifier': 'main',
+                                        'routine': {'expression': {'type': 'int',
+                                                                   'identifier': 'a',
+                                                                   'op': '=',
+                                                                   'expression': {'value': '1'}},
+                                                    'routine': {'expression': {'type': 'int',
+                                                                               'identifier': 'b',
+                                                                               'op': '=',
+                                                                               'expression': {'identifier': 'a',
+                                                                                              'op': '+',
+                                                                                              'expression': {'value': '2'}}},
+                                                                'routine': {'return': {'expression': {'identifier': 'b',
+                                                                                                      'op': '+',
+                                                                                                      'expression': {'value': '3'}}}}}}},
+                           'functions': {'function': {'type': 'int',
+                                                      'identifier': 'notmain',
+                                                      'routine': {'expression': {'type': 'int',
+                                                                                 'identifier': 'd',
+                                                                                 'op': '=',
+                                                                                 'expression': {'value': '1',
+                                                                                                'op': '+',
+                                                                                                'expression': {'value': '2'}}},
+                                                                  'routine': {'return': {'expression': {'identifier': 'd',
+                                                                                                        'op': '+',
+                                                                                                        'expression': {'value': '3'}}}}}}}}}}
+――― Internal Representation ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+[[{'LOC': {'tgt': '*main'}},
+  [{'MOV': {'tgt': '*a', 'src': '#1'}},
+   [{'MOV': {'tgt': '*b', 'src': {'ADD': {'tgt': '*a', 'src': '#2'}}}},
+    {'RET': {'tgt': {'ADD': {'tgt': '*b', 'src': '#3'}}}}]]],
+ [{'LOC': {'tgt': '*notmain'}},
+  [{'MOV': {'tgt': '*d', 'src': {'ADD': {'tgt': '#1', 'src': '#2'}}}},
+   {'RET': {'tgt': {'ADD': {'tgt': '*d', 'src': '#3'}}}}]]]
+――― Target Code (Post-Processed) ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 main:
   push rbp
   mov rbp, rsp
@@ -194,6 +194,7 @@ notmain:
   add rax, 3
   pop rbp
   ret
+
 
 ```
 
