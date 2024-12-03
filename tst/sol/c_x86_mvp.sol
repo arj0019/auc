@@ -4,9 +4,9 @@ int main() {
 }
 
 ――― Abstract Syntax ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-{'function': {'type': 'int',
-              'identifier': 'main',
-              'routine': {'return': {'expression': {'value': '0'}}}}}
+{'program': {'functions': {'function': {'type': 'int',
+                                        'identifier': 'main',
+                                        'routine': {'return': {'expression': {'value': '0'}}}}}}}
 ――― Internal Representation ――――――――――――――――――――――――――――――――――――――――――――――――――――
 [{'LOC': {'tgt': '*main'}}, {'RET': {'tgt': '#0'}}]
 ――― Target Code (Post-Processed) ―――――――――――――――――――――――――――――――――――――――――――――――

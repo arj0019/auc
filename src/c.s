@@ -1,6 +1,14 @@
 .del (\n|\t)
 
-.org function
+.org program
+.fmt program ::= \s*(?P<functions>.*})
+.map program ::= &functions
+
+.fmt functions ::= \s*(?P<function>.*?})(?P<functions>.*})
+                 | \s*(?P<function>.*})
+.map functions ::= &function; &functions
+                 | &function
+
 .fmt function ::= \s*(?P<type>\w+)\s+(?P<identifier>\w+)\(\)\s*\{(?P<routine>.*?)\}
 .map function ::= LOC &identifier; &routine
 
