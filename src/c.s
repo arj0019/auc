@@ -1,5 +1,6 @@
 .del (\n|\t)
 
+.org function
 .fmt function ::= \s*(?P<type>\w+)\s+(?P<identifier>\w+)\(\)\s*\{(?P<routine>.*?)\}
 .map function ::= LOC &identifier; &routine
 

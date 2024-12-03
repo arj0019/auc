@@ -44,7 +44,7 @@ Formats define the structure of code; they are python regular expressions extend
 FMT = r'\.fmt\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
 ```
 
-Maps define the internal representation of the corresponding format; they are matched to the INStruction expression.
+Maps define the internal representation of the corresponding format; they are matched to the instruction expression.
 - Within a mapping variant, a series of instructions can be delimited with `AND = r'\s*;\s*'`.
 - Instructions consist of an opcode, and optionally a target and source operand.
 - In the case that there is no operand, the opcode becomes the operand; this is how terminal values are represented.
@@ -56,10 +56,23 @@ INS = r'(?P<opc>[&*#]?\w+)(?:\s+(?P<tgt>[&*#]\w+))?\s*(?:,\s*(?P<src>[&*#]\w+))?
 ### Source Grammar
 A source grammar defines the mapping of formatted source code to an internal representation.
 
+Source code parsing may be restricted to specific 'entry points' by defining symbols as an origin.
+- If no parsing origins are defined, all symbols qualify as parsing origins.
+```
+ORG = r'\.org\s+(?P<tgt>.+?)(?=\.\w+\s+|$)'
+```
+
+For example, an independent `expression` will result in a syntax error if `function` is defined as the only origin...
+```
+.org function
+```
+
 Source maps may contain control characters that are interpreted and handled as defined below...
 - `*[symbol]`: Map symbol format to a tracked symbol; its location may be stored in the symbol table.
 - `&[symbol]`: Map symbol format to a complex object; it is typically a nested internal representation.
 - `#[symbol]`: Map symbol format to an explicit value; this is a terminal, such as a number.
+
+Multiple instructions may be defined within a source grammar mapping variant with `AND = r'\s*\;\s*'`.
 
 For example, the source formatting and mapping of `return` could be defined as...
 ```
@@ -114,51 +127,7 @@ DUC is a C-like compiler developed concurrently with the ECC framework that is u
 For example, the logged output of `./duc -v DEBUG ./tst/fun.c` is...
 
 ```
-――― Source Deletions ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-['(\\n|\\t)']
-――― Source Substitutions ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-[]
-――― Source Grammar ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-{'function': ['\\s*(?P<type>\\w+)\\s+(?P<identifier>\\w+)\\(\\)\\s*\\{(?P<routine>.*?)\\}'],
- 'routine': ['\\s*(?P<expression>[^;]*;)(?P<routine>.*;)',
-             '\\s*(?P<expression>[^;]*;)',
-             '\\s*(?P<return>[^;]*;)'],
- 'expression': ['(?P<type>\\w+)\\s+(?P<identifier>\\w+)\\s*(?P<op>\\S+)\\s*(?P<expression>[^;]*;)',
-                '(?P<identifier>\\w+)\\s*(?P<op>\\S+)\\s*(?P<expression>[^;]*;)',
-                '(?P<value>\\w+)\\s*(?P<op>\\S+)\\s*(?P<expression>[^;]*;)',
-                '(?P<identifier>\\w+);',
-                '(?P<value>\\w+);'],
- 'return': ['return\\s+(?P<expression>[^;]*;)',
-            'return\\s+(?P<value>\\w+);',
-            'return\\s+(?P<identifier>\\w+);'],
- 'op': ['=', '\\+', '-', '\\*', '/'],
- 'type': ['int'],
- 'value': ['-?0x[0-9A-Fa-f]+', '-?[0-9]+'],
- 'identifier': ['[A-Za-z_][0-9A-Za-z_]*']}
-――― Source Map ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-{'function': [[{'opc': 'LOC', 'tgt': '&identifier', 'src': None},
-               {'opc': '&routine', 'tgt': None, 'src': None}]],
- 'routine': [[{'opc': '&expression', 'tgt': None, 'src': None},
-              {'opc': '&routine', 'tgt': None, 'src': None}],
-             [{'opc': '&expression', 'tgt': None, 'src': None}],
-             [{'opc': '&return', 'tgt': None, 'src': None}]],
- 'expression': [[{'opc': '&op', 'tgt': '&identifier', 'src': '&expression'}],
-                [{'opc': '&op', 'tgt': '&identifier', 'src': '&expression'}],
-                [{'opc': '&op', 'tgt': '&value', 'src': '&expression'}],
-                [{'opc': '&identifier', 'tgt': None, 'src': None}],
-                [{'opc': '&value', 'tgt': None, 'src': None}]],
- 'return': [[{'opc': 'RET', 'tgt': '&expression', 'src': None}],
-            [{'opc': 'RET', 'tgt': '&value', 'src': None}],
-            [{'opc': 'RET', 'tgt': '&identifier', 'src': None}]],
- 'op': [[{'opc': 'MOV', 'tgt': None, 'src': None}],
-        [{'opc': 'ADD', 'tgt': None, 'src': None}],
-        [{'opc': 'SUB', 'tgt': None, 'src': None}],
-        [{'opc': 'MUL', 'tgt': None, 'src': None}],
-        [{'opc': 'DIV', 'tgt': None, 'src': None}]],
- 'value': [[{'opc': '#value', 'tgt': None, 'src': None}],
-           [{'opc': '#value', 'tgt': None, 'src': None}]],
- 'identifier': [[{'opc': '*identifier', 'tgt': None, 'src': None}]]}
-――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+――― Source Code ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 int main() {
   int a = 1;
   int b = a + 2;
@@ -170,9 +139,7 @@ int notmain() {
   return d + 3;
 }
 
-――― Source Code (Pre-Processed) ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-int main() {  int a = 1;  int b = a + 2;  return b + 3;}int notmain() {  int d = 1 + 2;  return d + 3;}
-――― Abstract Syntax ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+――― Abstract Syntax ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 [{'function': {'type': 'int',
                'identifier': 'main',
                'routine': {'expression': {'type': 'int',
@@ -199,7 +166,7 @@ int main() {  int a = 1;  int b = a + 2;  return b + 3;}int notmain() {  int d =
                            'routine': {'return': {'expression': {'identifier': 'd',
                                                                  'op': '+',
                                                                  'expression': {'value': '3'}}}}}}}]
-――― Internal Representation ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+――― Internal Representation ――――――――――――――――――――――――――――――――――――――――――――――――――――
 [{'LOC': {'tgt': '*main'}},
  [{'MOV': {'tgt': '*a', 'src': '#1'}},
   [{'MOV': {'tgt': '*b', 'src': {'ADD': {'tgt': '*a', 'src': '#2'}}}},
@@ -207,43 +174,15 @@ int main() {  int a = 1;  int b = a + 2;  return b + 3;}int notmain() {  int d =
  {'LOC': {'tgt': '*notmain'}},
  [{'MOV': {'tgt': '*d', 'src': {'ADD': {'tgt': '#1', 'src': '#2'}}}},
   {'RET': {'tgt': {'ADD': {'tgt': '*d', 'src': '#3'}}}}]]
-――― Target Map ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-{'CALL': ['CALL *tgt'],
- 'LOC': ['LOC *tgt'],
- 'MOV': ['MOV *tgt, &src', 'MOV *tgt, #src'],
- 'ADD': ['ADD *tgt, #src', 'ADD #tgt, &src', 'ADD #tgt, #src'],
- 'SUB': ['SUB #tgt, &src', 'SUB #tgt, #src'],
- 'RET': ['RET *tgt', 'RET &tgt', 'RET #tgt']}
-――― Target Grammar ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-{'LOC': ['$tgt:\\n\\tpush rbp\\n\\tmov rbp, rsp\\n'],
- 'MOV': ['&src\\tpop rax\\n\\tmov rbp-!tgt, rax\\n',
-         '\\tmov rbp-!tgt, $src\\n'],
- 'ADD': ['\\tmov rax, rbp-&tgt\\n\\tadd rax, $src\\n\\tpush rax\\n',
-         '&src\\tpop rax\\n\\tadd rax, $tgt\\n\\tpush rax\\n',
-         '\\tmov rax, $src\\n\\tadd rax, $tgt\\n\\tpush rax\\n'],
- 'SUB': ['&src\\tpop rbp\\n\\tmov rax, $tgt\\n\\tsub rax, rbp\\n\\tpush rax\\n',
-         '\\tmov rax, $tgt\\n\\tsub rax, $src\\n\\tpush rax\\n'],
- 'RET': ['\\tmov rax, rbp-&tgt\\n\\tret\\n',
-         '&tgt\\tpop rax\\n\\tpop rbp\\n\\tret\\n',
-         '\\tmov rax, $tgt\\n\\tpop rbp\\n\\tret\\n']}
-――― Target Deletions ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-['\\tpush rax\\n\\tpop rax\\n', '\\tadd [^\\n]*, 0\\n', '\\tsub [^\\n]*, 0\\n']
-――― Target Substitutions ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-[('\\tmov ([^\\n]*), ([^\\n]*)\\n\\tmov \\2, \\1\\n', '\\tmov \\1, \\2\\n')]
-――― Target Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+――― Target Code (Post-Processed) ―――――――――――――――――――――――――――――――――――――――――――――――
 main:
   push rbp
   mov rbp, rsp
-  mov rbp-2, 1
-  mov rax, rbp-2
+  mov rbp-0, 1
+  mov rax, rbp-0
   add rax, 2
-  push rax
-  pop rax
-  mov rbp-4, rax
-  mov rax, rbp-4
+  mov rbp-2, rax
   add rax, 3
-  push rax
-  pop rax
   pop rbp
   ret
 notmain:
@@ -251,36 +190,11 @@ notmain:
   mov rbp, rsp
   mov rax, 2
   add rax, 1
-  push rax
-  pop rax
-  mov rbp-2, rax
-  mov rax, rbp-2
+  mov rbp-0, rax
   add rax, 3
-  push rax
-  pop rax
   pop rbp
   ret
 
-――― Target Code (Post-Processed) ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-main:
-  push rbp
-  mov rbp, rsp
-  mov rbp-2, 1
-  mov rax, rbp-2
-  add rax, 2
-  mov rbp-4, rax
-  add rax, 3
-  pop rbp
-  ret
-notmain:
-  push rbp
-  mov rbp, rsp
-  mov rax, 2
-  add rax, 1
-  mov rbp-2, rax
-  add rax, 3
-  pop rbp
-  ret
 ```
 
 

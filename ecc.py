@@ -18,6 +18,8 @@ PPRINT = lambda text: pprint.pformat(text, sort_dicts=False)
 DEL = r'\.del\s+(?P<tgt>.+?)(?=\.\w+\s+|$)'
 SUB = r'\.sub\s+(?P<tgt>.+?);(?P<src>.+?)(?=\.\w+\s+|$)'
 
+ORG = r'\.org\s+(?P<sym>.+?)(?=\.\w+\s+|$)'
+
 FMT = r'\.fmt\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
 MAP = r'\.map\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
 
@@ -50,6 +52,11 @@ class Parser():
     self.sfmt = OrderedDict(sfmt)
     logging.debug(PPRINT(dict(self.sfmt)))
 
+    logging.debug(HEADER('Source Origins'))
+    self.sorg = {sym: exprs for sym, exprs in self.sfmt.items()
+                 if sym in re.findall(ORG, grammar)}
+    logging.debug(PPRINT(self.sorg))
+
     logging.debug(HEADER('Source Map'))
     smap = {sym: [[re.match(INS, expr).groupdict()
                    for expr in re.split(AND, exprs)]
@@ -76,7 +83,8 @@ class Parser():
     logging.debug(_source)
 
     logging.info(HEADER('Abstract Syntax'))
-    ast = Parser._reduce(self._parse(_source, self.sfmt.items()))
+    org = self.sorg.items() if self.sorg else self.sfmt.items()
+    ast = Parser._reduce(self._parse(_source, org))
     logging.info(PPRINT(ast))
 
     logging.info(HEADER('Internal Representation'))
