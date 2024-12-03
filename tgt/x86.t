@@ -111,8 +111,6 @@
              \tpop rbp\n
              \tret\n
 
-.del \tpush rax\n
-     \tpop rax\n
 .del \tadd [^\n]*, 0\n
 .del \tsub [^\n]*, 0\n
 
