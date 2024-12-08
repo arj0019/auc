@@ -18,6 +18,8 @@ PPRINT = lambda text: pprint.pformat(text, sort_dicts=False)
 DEL = r'\.del\s+(?P<tgt>.+?)(?=\.\w+\s+|$)'
 SUB = r'\.sub\s+(?P<tgt>.+?);(?P<src>.+?)(?=\.\w+\s+|$)'
 
+BAL = r'\.bal\s+(?P<prefix>.)(?P<suffix>.)'
+
 ORG = r'\.org\s+(?P<sym>.+?)(?=\.\w+\s+|$)'
 
 FMT = r'\.fmt\s+(?P<sym>\w+)\s*::=\s*(?P<exprs>.*?)(?=\.\w+\s+|$)'
@@ -39,17 +41,41 @@ class Parser():
     grammar = re.sub(r'\s{2,}', '\t', grammar)
     grammar = re.sub(r'(\n|\t)', '', grammar)
 
-    logging.debug(HEADER('Source Deletions'))
+    logging.debug(HEADER('Source Processing'))
     self.sdel = re.findall(DEL, grammar)
-    logging.debug(PPRINT(self.sdel))
+    logging.debug(f"DEL: {PPRINT(self.sdel)}")
 
-    logging.debug(HEADER('Source Substitutions'))
     self.ssub = re.findall(SUB, grammar)
-    logging.debug(PPRINT(self.ssub))
+    logging.debug(f"SUB: {PPRINT(self.ssub)}")
+
+    self.sbal = re.findall(BAL, grammar)
+    logging.debug(f"BAL: {PPRINT(self.sbal)}")
 
     logging.debug(HEADER('Source Grammar'))
     sfmt = [(sym, re.split(OR, exprs)) for sym, exprs in re.findall(FMT, grammar)]
     self.sfmt = OrderedDict(sfmt)
+
+    for sym in self.sfmt:  # balance delimeters in format using paired id's
+      for var, fmt in enumerate(self.sfmt[sym]):
+        ctr = lim = _ord = 0  # lifo counter references namespaces reserved with the limit
+        for prefix, suffix in self.sbal:
+          index, PREFIX, SUFFIX = 0, f'\\{prefix}', f'\\{suffix}'
+          while index < len(fmt):  # single-forward-pass delimeter substitution
+            if fmt[index:].startswith(PREFIX):  # if prefix in fmt...
+              grp = rf'(?P<d{lim}>@[0-9]+){PREFIX}'  # declare a delimeter namespace
+              fmt = fmt[:index] + grp + fmt[index + len(PREFIX):]
+              ctr, lim, _ord, index = lim + 1, lim + 1, _ord + 1, index + len(grp)
+
+            elif fmt[index:].startswith(SUFFIX):  # if suffix in fmt...
+              ctr -= 1  # decrement counter before reference; limit is maintained
+              grp = rf'(?P=d{ctr}){SUFFIX}'  # reference a delimeter namespace
+              fmt = fmt[:index] + grp + fmt[index + len(SUFFIX):]
+              _ord, index = _ord - 1, index + len(grp)
+
+            else: index += 1  # increment if balanced delimeters not found
+          if _ord != 0: raise SyntaxError(f"Balanced delimeters are not balanced; residual nesting order is {ctr}. The incorrect format is variant {var} of {sym}: '{fmt}'")
+        else: self.sfmt[sym][var] = fmt
+
     logging.debug(PPRINT(dict(self.sfmt)))
 
     logging.debug(HEADER('Source Origins'))
@@ -104,7 +130,27 @@ class Parser():
       source (str): preprocessed source code
     """
     for _del in self.sdel: source = re.sub(_del, '', source)
+
     for tgt, src in self.ssub: source = re.sub(tgt, src, source)
+
+    ctr = 0  # lifo counter provides stack-like balance tracking
+    for prefix, suffix in self.sbal:
+      idx = 0  # source will grow, so end condition is calculated each iteration
+      while idx < len(source):  # single-forward-pass delimeter substitution
+        if source[idx:].startswith(prefix):
+          _id = rf'@{ctr}{prefix}'  # balanced delimeter identifier
+          source = source[:idx] + _id + source[idx + len(prefix):]
+          ctr, idx = ctr + 1, idx + len(_id)
+
+        elif source[idx:].startswith(suffix):
+          ctr -= 1  # decrement counter before reference; limit is maintained
+          _id = rf'@{ctr}{suffix}'  # balancing delimeter identifier
+          source = source[:idx] + _id + source[idx + len(suffix):]
+          idx = idx + len(_id)
+
+        else: idx += 1  # increment if balanced delimeters not found
+    if ctr != 0: raise SyntaxError(f"Balanced delimeters are not balanced; residual nesting order is {ctr}.")
+
     return source
 
   def _parse(self, source, targets):
@@ -128,6 +174,7 @@ class Parser():
           try:
             if (_match := match.groupdict().items()):
               for _sym, _expr in _match:
+                if _expr.startswith('@'): continue
                 if not _expr: continue
                 _targets = {_sym: self.sfmt[_sym]}.items()
                 _ast[sym][_sym] = self._parse(_expr, _targets)
@@ -156,6 +203,7 @@ class Parser():
       for sym, attrs in _ast.items():  # identify ast variant
         for var, expr in enumerate(self.sfmt[sym]):
           groups = re.compile(expr).groupindex.keys()
+          groups = [group for group in groups if not re.match(r'^d\d+$', group)]
           if isinstance(attrs, dict) and set(attrs.keys()) == set(groups): break
           elif not isinstance(attrs, dict) and re.match(expr, attrs): break
         else: raise SyntaxError(f"{_ast}")

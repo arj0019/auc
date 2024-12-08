@@ -1,5 +1,9 @@
 .del (\n|\t)
 
+.bal ()
+.bal {}
+.bal []
+
 .org program
 .fmt program ::= \s*(?P<functions>.*})
 .map program ::= &functions
