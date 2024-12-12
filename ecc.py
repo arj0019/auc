@@ -167,6 +167,10 @@ class Parser():
     while source:  # sequentially match source to grammar
       for sym, exprs in targets:
         for expr in exprs:
+          for prefix, suffix in self.sbal:
+            for delim in re.finditer(rf"@(?P<id>[0-9]+)\{suffix}", source):
+              if not re.search(rf"@{delim.group('id')}\{prefix}", source):
+                source = re.sub(rf"@{delim.group('id')}\{suffix}", '', source)
           if not (match := re.match(expr, source, re.DOTALL)): continue
 
           # recursively parse subexpressions (grammar references)
@@ -174,8 +178,7 @@ class Parser():
           try:
             if (_match := match.groupdict().items()):
               for _sym, _expr in _match:
-                if _expr.startswith('@'): continue
-                if not _expr: continue
+                if not re.sub('@[0-9]+', '', _expr): continue
                 _targets = {_sym: self.sfmt[_sym]}.items()
                 _ast[sym][_sym] = self._parse(_expr, _targets)
             else:
