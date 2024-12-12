@@ -5,6 +5,7 @@ import os
 import pprint
 import re
 import shutil
+import uuid
 
 
 TERMSIZE = shutil.get_terminal_size()  # get the terminal size for formatting
@@ -342,6 +343,10 @@ class Generator():
         for opr in {opr:val for opr, val in args.items() if opr != 'opc'}:
           if isinstance(args[opr], dict):  # if operand is a nested ir...
             fmt = re.sub(rf"\&{opr}", self._generate(args[opr], syms, ofs), fmt)
+
+            if re.search(rf"\!{opr}", fmt):  # if temporary symbol is declared...
+              syms[(_id := uuid.uuid4())] = rf"{(ofs := ofs + 2)}"
+              fmt = re.sub(rf"\!{opr}", syms[_id], fmt)
 
           elif args[opr][0] == '#':  # if operand is an explicit value...
             fmt = re.sub(rf"\${opr}", args[opr][1:], fmt)

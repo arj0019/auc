@@ -24,6 +24,7 @@
                | &return
 
 .fmt expression ::= (?P<type>\w+)\s+(?P<identifier>\w+)\s*(?P<op>\S+)\s*(?P<expression>[^;]+;)
+                  | \(\((?P<_expression>.+?)\)\s*(?P<op>\S+)\s*(?P<expression>[^;]*\);)
                   | \((?P<identifier>\S+)\s*(?P<op>\S+)\s*(?P<expression>[^;]*\);)
                   | (?P<identifier>\S+)\s*(?P<op>\S+)\s*(?P<expression>[^;]*;)
                   | \((?P<value>\S+)\s*(?P<op>\S+)\s*(?P<expression>[^;]*\);)
@@ -31,12 +32,26 @@
                   | (?P<identifier>\S+);
                   | (?P<value>\S+);
 .map expression ::= &op &identifier, &expression
+                  | &op &_expression, &expression
                   | &op &identifier, &expression
                   | &op &identifier, &expression
                   | &op &value, &expression
                   | &op &value, &expression
                   | &identifier
                   | &value
+
+.fmt _expression ::= \((?P<identifier>\S+)\s*(?P<op>\S+)\s*(?P<_expression>.+\))
+                   | (?P<identifier>\S+)\s*(?P<op>\S+)\s*(?P<_expression>.+)
+                   | \((?P<value>\S+)\s*(?P<op>\S+)\s*(?P<_expression>.+\))
+                   | (?P<value>\S+)\s*(?P<op>\S+)\s*(?P<_expression>.+)
+                   | (?P<identifier>\S+)
+                   | (?P<value>\S+)
+.map _expression ::= &op &identifier, &_expression
+                   | &op &identifier, &_expression
+                   | &op &value, &_expression
+                   | &op &value, &_expression
+                   | &identifier
+                   | &value
 
 .fmt return ::= return\s+(?P<expression>[^;]*;)
               | return\s+(?P<value>\w+);

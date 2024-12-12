@@ -17,6 +17,9 @@
 .map ADD ::= ADD *tgt, *src
            | ADD *tgt, &src
            | ADD *tgt, #src
+           | ADD &tgt, *src
+           | ADD &tgt, &src
+           | ADD &tgt, #src
            | ADD #tgt, *src
            | ADD #tgt, &src
            | ADD #tgt, #src
@@ -25,6 +28,14 @@
            | &src
              \tadd rax, rbp-&tgt\n
            | \tmov rax, rbp-&tgt\n
+             \tadd rax, $src\n
+           | &tgt
+             \tadd rax, rbp-&src\n
+           | &src
+             \tmov rbp-!src, rax\n
+             &tgt
+             \tadd rax, rbp-!src\n
+           | &tgt
              \tadd rax, $src\n
            | \tmov rax, $tgt\n
              \tadd rax, rbp-&src\n
@@ -36,6 +47,9 @@
 .map SUB ::= SUB *tgt, *src
            | SUB *tgt, &src
            | SUB *tgt, #src
+           | SUB &tgt, *src
+           | SUB &tgt, &src
+           | SUB &tgt, #src
            | SUB #tgt, *src
            | SUB #tgt, &src
            | SUB #tgt, #src
@@ -46,6 +60,14 @@
              \tmov rax, rbp-&tgt\n
              \tsub rax, rbx\n
            | \tmov rax, rbp-&tgt\n
+             \tsub rax, $src\n
+           | &tgt
+             \tsub rax, rbp-&src\n
+           | &src
+             \tmov rbp-!src, rax\n
+             &tgt
+             \tsub rax, rbp-!src\n
+           | &tgt
              \tsub rax, $src\n
            | \tmov rax, $tgt\n
              \tsub rax, rbp-&src\n
@@ -59,6 +81,9 @@
 .map MUL ::= MUL *tgt, *src
            | MUL *tgt, &src
            | MUL *tgt, #src
+           | MUL &tgt, *src
+           | MUL &tgt, &src
+           | MUL &tgt, #src
            | MUL #tgt, *src
            | MUL #tgt, &src
            | MUL #tgt, #src
@@ -68,6 +93,14 @@
              \tmul rax. rbp-&tgt\n
            | \tmov rax, $src\n
              \tmul rax, rbp-&tgt\n
+           | &tgt
+             \tmul rax, rbp-&src\n
+           | &src
+             \tmov rbp-!src, rax\n
+             &tgt
+             \tmul rax, rbp-!src\n
+           | &tgt
+             \tmul rax, $src\n
            | \tmov rax, $tgt\n
              \tmul rax, rbp-&src\n
            | &src
@@ -78,6 +111,9 @@
 .map DIV ::= DIV *tgt, *src
            | DIV *tgt, &src
            | DIV *tgt, #src
+           | DIV &tgt, *src
+           | DIV &tgt, &src
+           | DIV &tgt, #src
            | DIV #tgt, *src
            | DIV #tgt, &src
            | DIV #tgt, #src
@@ -88,6 +124,14 @@
              \tmov rax, rbp-&tgt\n
              \tdiv rax, rbx\n
            | \tmov rax, rbp-&tgt\n
+             \tdiv rax, $src\n
+           | &tgt
+             \tdiv rax, rbp-&src\n
+           | &src
+             \tmov rbp-!src, rax\n
+             &tgt
+             \tdiv rax, rbp-!src\n
+           | &tgt
              \tdiv rax, $src\n
            | \tmov rax, $tgt\n
              \tdiv rax, rbp-&src\n
